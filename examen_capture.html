@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Examen — Daily Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0b0b10;
+    --surface:  #13131c;
+    --surface2: #1c1c28;
+    --border:   #2a2a3a;
+    --gold:     #c9a84c;
+    --gold-dim: #8a6f30;
+    --cream:    #f0ead6;
+    --muted:    #6b6b82;
+    --text:     #d4cfc4;
+
+    --commit:  #c9a84c;
+    --hold:    #5b8fa8;
+    --wait:    #7a9e7e;
+    --consult: #9b7ec8;
+    --toxic:   #b94040;
+
+    --r: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .logo-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+  }
+
+  .logo-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .header-link {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--gold-dim);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+    border-radius: 4px;
+  }
+
+  /* ── MAIN ────────────────────────────────── */
+  .main { padding: 24px 20px; max-width: 560px; margin: 0 auto; }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .section-label span {
+    color: var(--gold);
+    margin-right: 6px;
+  }
+
+  /* ── DOMAIN PICKER ───────────────────────── */
+  .domains {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .domain-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 12px 4px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .domain-btn:hover { border-color: var(--gold-dim); }
+
+  .domain-btn.active {
+    background: #1e1a0e;
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.15);
+  }
+
+  .domain-icon { font-size: 18px; }
+
+  .domain-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .domain-btn.active .domain-label { color: var(--gold); }
+
+  /* ── TEXT INPUTS ─────────────────────────── */
+  .field { margin-bottom: 22px; }
+
+  .field-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .field-hint {
+    font-size: 8px;
+    color: var(--border);
+    font-style: italic;
+  }
+
+  textarea, input[type="text"], input[type="date"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    color: var(--text);
+    font-family: 'Lato', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    padding: 12px 14px;
+    resize: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  textarea:focus, input:focus {
+    outline: none;
+    border-color: var(--gold-dim);
+  }
+
+  textarea { min-height: 80px; }
+
+  /* ── GUT STATE ───────────────────────────── */
+  .gut-states {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .state-btn {
+    padding: 10px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .state-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
+  .state-btn[data-state="COMMIT"] .state-dot { background: var(--commit); }
+  .state-btn[data-state="HOLD"]   .state-dot { background: var(--hold); }
+  .state-btn[data-state="WAIT"]   .state-dot { background: var(--wait); }
+  .state-btn[data-state="CONSULT"] .state-dot { background: var(--consult); }
+  .state-btn[data-state="TOXIC"]  .state-dot { background: var(--toxic); }
+
+  .state-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 7px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .state-btn.active { border-color: currentColor; }
+  .state-btn[data-state="COMMIT"].active  { border-color: var(--commit);  background: #1e1908; color: var(--commit); }
+  .state-btn[data-state="HOLD"].active    { border-color: var(--hold);    background: #0b1520; color: var(--hold); }
+  .state-btn[data-state="WAIT"].active    { border-color: var(--wait);    background: #0d160e; color: var(--wait); }
+  .state-btn[data-state="CONSULT"].active { border-color: var(--consult); background: #160f20; color: var(--consult); }
+  .state-btn[data-state="TOXIC"].active   { border-color: var(--toxic);   background: #1c0a0a; color: var(--toxic); }
+  .state-btn.active .state-name { color: currentColor; }
+
+  /* ── SLIDERS ─────────────────────────────── */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .slider-wrap { flex: 1; }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 6px rgba(201,168,76,0.4);
+  }
+
+  .slider-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--gold);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── ONE-WAY DOOR ────────────────────────── */
+  .one-way-door {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .one-way-door:hover { border-color: var(--gold-dim); }
+  .one-way-door.active { border-color: var(--toxic); background: #1a0c0c; }
+
+  .owd-icon { font-size: 20px; }
+
+  .owd-text { flex: 1; }
+
+  .owd-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    color: var(--cream);
+    margin-bottom: 2px;
+  }
+
+  .owd-desc {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .owd-check {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .one-way-door.active .owd-check {
+    background: var(--toxic);
+    border-color: var(--toxic);
+  }
+
+  .owd-check-inner {
+    width: 10px; height: 10px;
+    background: white;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .one-way-door.active .owd-check-inner { opacity: 1; }
+
+  /* ── DIVIDER ─────────────────────────────── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+    position: relative;
+  }
+
+  .divider::after {
+    content: '◆';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg);
+    color: var(--gold-dim);
+    font-size: 10px;
+    padding: 0 8px;
+  }
+
+  /* ── KERNEL RESULT ───────────────────────── */
+  .kernel-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .kernel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #0e0e17;
+  }
+
+  .kernel-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .kernel-live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0.7;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 0.2; }
+  }
+
+  .kernel-body { padding: 16px; }
+
+  .kernel-idle {
+    text-align: center;
+    padding: 24px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .kernel-result { display: none; }
+  .kernel-result.visible { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .result-state-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  .result-state-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid currentColor;
+  }
+
+  .result-state-badge.COMMIT  { color: var(--commit);  background: #1e1908; }
+  .result-state-badge.HOLD    { color: var(--hold);    background: #0b1520; }
+  .result-state-badge.WAIT    { color: var(--wait);    background: #0d160e; }
+  .result-state-badge.CONSULT { color: var(--consult); background: #160f20; }
+  .result-state-badge.TOXIC   { color: var(--toxic);   background: #1c0a0a; }
+
+  .result-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .metric-box {
+    background: #0e0e17;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+
+  .metric-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .metric-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: var(--gold);
+  }
+
+  .result-rationale {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+  }
+
+  /* ── ONE-WAY GATE WARNING ────────────────── */
+  .gate-warning {
+    background: #1c0a0a;
+    border: 1px solid var(--toxic);
+    border-radius: var(--r);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .gate-warning.visible { display: block; }
+
+  .gate-warning-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 13px;
+    color: var(--toxic);
+    margin-bottom: 6px;
+  }
+
+  .gate-warning-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ── FOLLOW / OVERRIDE ───────────────────── */
+  .action-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .action-btn {
+    padding: 14px;
+    border-radius: var(--r);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .action-btn:hover { border-color: var(--gold-dim); }
+
+  .action-btn.active-follow {
+    border-color: var(--gold);
+    background: #1e1908;
+  }
+
+  .action-btn.active-override {
+    border-color: var(--consult);
+    background: #160f20;
+  }
+
+  .action-btn-icon { font-size: 22px; }
+
+  .action-btn-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .action-btn.active-follow .action-btn-label { color: var(--gold); }
+  .action-btn.active-override .action-btn-label { color: var(--consult); }
+
+  /* ── SUCCESS CRITERIA ────────────────────── */
+  .success-block { display: none; animation: fadeIn 0.3s ease; }
+  .success-block.visible { display: block; }
+
+  /* ── SAVE BTN ────────────────────────────── */
+  .save-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--gold);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--r);
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 12px;
+  }
+
+  .save-btn:hover { background: #d9b85c; box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
+  .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .save-meta {
+    text-align: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+  }
+
+  /* ── TOAST ───────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 12px 24px;
+    border-radius: 40px;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <!-- EXAMEN LOGO MARK -->
+    <svg class="logo-mark" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- outer ring -->
+      <circle cx="18" cy="18" r="16.5" stroke="#c9a84c" stroke-width="0.8" opacity="0.4"/>
+      <!-- tick marks -->
+      <line x1="18" y1="1.5" x2="18" y2="4.5" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <line x1="18" y1="31.5" x2="18" y2="34.5" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <line x1="1.5" y1="18" x2="4.5" y2="18" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <line x1="31.5" y1="18" x2="34.5" y2="18" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <!-- small ticks -->
+      <line x1="28.3" y1="4.8" x2="27.0" y2="7.1" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <line x1="7.7" y1="4.8" x2="9.0" y2="7.1" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <line x1="28.3" y1="31.2" x2="27.0" y2="28.9" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <line x1="7.7" y1="31.2" x2="9.0" y2="28.9" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <!-- inner circle -->
+      <circle cx="18" cy="18" r="3.5" fill="#c9a84c" opacity="0.9"/>
+      <!-- needle pointing slightly above horizontal — the balance tongue -->
+      <line x1="18" y1="18" x2="28" y2="12" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- counterweight -->
+      <line x1="18" y1="18" x2="10" y2="21.5" stroke="#c9a84c" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+      <!-- crossbar -->
+      <line x1="13" y1="27" x2="23" y2="27" stroke="#c9a84c" stroke-width="0.8" opacity="0.35"/>
+      <line x1="18" y1="23" x2="18" y2="27" stroke="#c9a84c" stroke-width="0.8" opacity="0.35"/>
+      <!-- pans -->
+      <circle cx="10" cy="28.5" r="3.5" stroke="#c9a84c" stroke-width="0.7" fill="none" opacity="0.35"/>
+      <circle cx="26" cy="28.5" r="3.5" stroke="#c9a84c" stroke-width="0.7" fill="none" opacity="0.35"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-name">EXAMEN</span>
+      <span class="logo-sub">powered by NERVA</span>
+    </div>
+  </div>
+  <a class="header-link" href="examen_console.html">Console →</a>
+</header>
+
+<main class="main">
+
+  <!-- DOMAIN -->
+  <div class="section-label"><span>01</span>Domain</div>
+  <div class="domains" id="domainPicker">
+    <button class="domain-btn" data-domain="Money" onclick="selectDomain(this)">
+      <span class="domain-icon">⚖️</span>
+      <span class="domain-label">Money</span>
+    </button>
+    <button class="domain-btn" data-domain="People" onclick="selectDomain(this)">
+      <span class="domain-icon">🤝</span>
+      <span class="domain-label">People</span>
+    </button>
+    <button class="domain-btn" data-domain="Time" onclick="selectDomain(this)">
+      <span class="domain-icon">🕐</span>
+      <span class="domain-label">Time</span>
+    </button>
+    <button class="domain-btn" data-domain="Voice" onclick="selectDomain(this)">
+      <span class="domain-icon">📣</span>
+      <span class="domain-label">Voice</span>
+    </button>
+    <button class="domain-btn" data-domain="Body" onclick="selectDomain(this)">
+      <span class="domain-icon">⚡</span>
+      <span class="domain-label">Body</span>
+    </button>
+  </div>
+
+  <!-- DECISION -->
+  <div class="field">
+    <div class="field-label">
+      <span><span style="color:var(--gold)">02</span> &nbsp;The Decision</span>
+      <span class="field-hint">one sentence</span>
+    </div>
+    <textarea id="decisionText" placeholder="What are you deciding? Be precise." rows="2"></textarea>
+  </div>
+
+  <!-- GUT STATE -->
+  <div class="field">
+    <div class="field-label">
+      <span><span style="color:var(--gold)">03</span> &nbsp;Your Gut — before NERVA</span>
+    </div>
+    <div class="gut-states" id="gutPicker">
+      <button class="state-btn" data-state="COMMIT" onclick="selectGut(this)">
+        <div class="state-dot"></div>
+        <span class="state-name">Commit</span>
+      </button>
+      <button class="state-btn" data-state="HOLD" onclick="selectGut(this)">
+        <div class="state-dot"></div>
+        <span class="state-name">Hold</span>
+      </button>
+      <button class="state-btn" data-state="WAIT" onclick="selectGut(this)">
+        <div class="state-dot"></div>
+        <span class="state-name">Wait</span>
+      </button>
+      <button class="state-btn" data-state="CONSULT" onclick="selectGut(this)">
+        <div class="state-dot"></div>
+        <span class="state-name">Consult</span>
+      </button>
+      <button class="state-btn" data-state="TOXIC" onclick="selectGut(this)">
+        <div class="state-dot"></div>
+        <span class="state-name">Toxic</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ENTROPY -->
+  <div class="field">
+    <div class="field-label">
+      <span><span style="color:var(--gold)">04</span> &nbsp;Uncertainty Entropy</span>
+    </div>
+    <div class="slider-row">
+      <div class="slider-wrap">
+        <input type="range" id="entropy" min="0" max="100" value="40"
+          oninput="document.getElementById('entropyVal').textContent = (this.value/100).toFixed(2); runKernel()">
+        <div class="slider-labels"><span>certain</span><span>pure noise</span></div>
+      </div>
+      <span class="slider-value" id="entropyVal">0.40</span>
+    </div>
+  </div>
+
+  <!-- STAKES -->
+  <div class="field">
+    <div class="field-label">
+      <span><span style="color:var(--gold)">05</span> &nbsp;Stakes Magnitude</span>
+    </div>
+    <div class="slider-row">
+      <div class="slider-wrap">
+        <input type="range" id="stakes" min="0" max="100" value="50"
+          oninput="document.getElementById('stakesVal').textContent = (this.value/100).toFixed(2); runKernel()">
+        <div class="slider-labels"><span>low</span><span>critical</span></div>
+      </div>
+      <span class="slider-value" id="stakesVal">0.50</span>
+    </div>
+  </div>
+
+  <!-- EVIDENCE -->
+  <div class="field">
+    <div class="field-label">
+      <span><span style="color:var(--gold)">06</span> &nbsp;Evidence Weight</span>
+    </div>
+    <div class="slider-row">
+      <div class="slider-wrap">
+        <input type="range" id="evidence" min="0" max="100" value="50"
+          oninput="document.getElementById('evidenceVal').textContent = (this.value > 50 ? '+' : this.value < 50 ? '−' : '±') + Math.abs(this.value - 50); runKernel()">
+        <div class="slider-labels"><span>↑ strongly against</span><span>strongly for ↑</span></div>
+      </div>
+      <span class="slider-value" id="evidenceVal" style="width:50px">±0</span>
+    </div>
+  </div>
+
+  <!-- ONE-WAY DOOR -->
+  <div class="field">
+    <div class="field-label"><span><span style="color:var(--gold)">07</span> &nbsp;Reversibility</span></div>
+    <div class="one-way-door" id="owdToggle" onclick="toggleOWD()">
+      <span class="owd-icon">🚪</span>
+      <div class="owd-text">
+        <div class="owd-title">This is a One-Way Door</div>
+        <div class="owd-desc">The action cannot be undone once taken</div>
+      </div>
+      <div class="owd-check">
+        <div class="owd-check-inner"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- KERNEL PANEL -->
+  <div class="section-label"><span>NERVA</span>Kernel Output</div>
+
+  <div class="gate-warning" id="gateWarning">
+    <div class="gate-warning-title">⚠ One-Way Brake Engaged</div>
+    <div class="gate-warning-text">
+      This is an irreversible decision with insufficient confidence for the stake level. 
+      NERVA forces <strong style="color:var(--consult)">CONSULT</strong> — seek outside counsel before proceeding.
+    </div>
+  </div>
+
+  <div class="kernel-panel">
+    <div class="kernel-header">
+      <span class="kernel-title">NERVA · v9 · Kernel</span>
+      <span style="display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.12em;color:var(--muted)"><span class="kernel-live-dot"></span>live</span>
+    </div>
+    <div class="kernel-body">
+      <div class="kernel-idle" id="kernelIdle">
+        — pick your gut state to compute —
+      </div>
+      <div class="kernel-result" id="kernelResult">
+        <div class="result-state-row">
+          <div class="result-state-badge" id="resultBadge">—</div>
+          <div style="flex:1">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">NERVA State</div>
+            <div id="resultStateName" style="font-family:'Playfair Display',serif;font-size:13px;color:var(--cream)"></div>
+          </div>
+        </div>
+        <div class="result-metrics">
+          <div class="metric-box">
+            <div class="metric-label">Confidence</div>
+            <div class="metric-val" id="resultConf">—</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-label">Entropy</div>
+            <div class="metric-val" id="resultEntropy">—</div>
+          </div>
+        </div>
+        <div class="result-rationale" id="resultRationale"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOLLOW / OVERRIDE -->
+  <div class="section-label"><span>08</span>Your Action</div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px;letter-spacing:.08em">
+    Will you follow NERVA's call — or override it? Both are valid. The contrast is the data.
+  </div>
+  <div class="action-btns" id="actionPicker">
+    <button class="action-btn" id="btnFollow" onclick="selectAction('follow')">
+      <span class="action-btn-icon">🎯</span>
+      <span class="action-btn-label">Follow NERVA</span>
+    </button>
+    <button class="action-btn" id="btnOverride" onclick="selectAction('override')">
+      <span class="action-btn-icon">🔀</span>
+      <span class="action-btn-label">Override</span>
+    </button>
+  </div>
+
+  <!-- SUCCESS CRITERIA — always shown once action is picked -->
+  <div class="success-block" id="successBlock">
+    <div class="field">
+      <div class="field-label">
+        <span><span style="color:var(--gold)">09</span> &nbsp;How will you know this worked?</span>
+        <span class="field-hint">required — be falsifiable</span>
+      </div>
+      <textarea id="successCriteria" placeholder="e.g. Hit planned power target. Meeting booked by Friday. No regret at 7-day check-in."></textarea>
+    </div>
+
+    <div class="field">
+      <div class="field-label"><span><span style="color:var(--gold)">10</span> &nbsp;Check-in Date</span></div>
+      <input type="date" id="checkinDate">
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="field" id="notesField">
+    <div class="field-label">
+      <span><span style="color:var(--gold)">✦</span> &nbsp;Notes / Context</span>
+      <span class="field-hint">optional</span>
+    </div>
+    <textarea id="notesText" placeholder="Anything else to capture..."></textarea>
+  </div>
+
+  <!-- SAVE -->
+  <button class="save-btn" id="saveBtn" onclick="saveEntry()">Log Entry</button>
+  <div class="save-meta" id="saveMeta">entry will be stored to your Examen journal</div>
+
+</main>
+
+<div class="toast" id="toast">Entry logged. AMDG.</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let selectedDomain = null;
+let selectedGut    = null;
+let selectedAction = null;
+let owdActive      = false;
+let kernelOutput   = null;
+
+const STATE_NAMES = {
+  COMMIT:  'Act. You have what you need.',
+  HOLD:    'Keep position. Watch and let it develop.',
+  WAIT:    'Stand down. Low priority, no action yet.',
+  CONSULT: 'Seek counsel before proceeding.',
+  TOXIC:   'Walk away. Bad regardless of upside.'
+};
+
+// ── KERNEL ─────────────────────────────────────────────────────────────────
+function runKernel() {
+  const entropy  = parseInt(document.getElementById('entropy').value) / 100;
+  const stakes   = parseInt(document.getElementById('stakes').value) / 100;
+  const evidence = (parseInt(document.getElementById('evidence').value) - 50) / 50; // -1..+1
+  const owd      = owdActive;
+
+  // posture: normalized evidence weight
+  const posture = (evidence + 1) / 2; // 0..1
+  // confidence: how resolved is this
+  const confidence = posture * (1 - entropy);
+
+  let state;
+  let rationale;
+
+  // One-Way Brake
+  if (owd && confidence < 0.70 && stakes > 0.5) {
+    state = 'CONSULT';
+    rationale = 'One-Way Brake engaged: irreversible action with insufficient confidence at this stake level. Seek outside counsel before the door closes.';
+    document.getElementById('gateWarning').classList.add('visible');
+  } else {
+    document.getElementById('gateWarning').classList.remove('visible');
+
+    if (confidence >= 0.72 && entropy < 0.45) {
+      state = 'COMMIT';
+      rationale = 'Evidence leans clearly for, uncertainty is manageable, confidence is high. The needle tips — act.';
+    } else if (stakes < 0.25 && entropy > 0.55) {
+      state = 'WAIT';
+      rationale = 'Low stakes and high uncertainty: the cost of waiting is lower than the cost of deciding wrong. Let time reduce noise.';
+    } else if (confidence < 0.30 && stakes > 0.65) {
+      state = 'TOXIC';
+      rationale = 'High stakes, low confidence, evidence against. Expected value is negative regardless of upside framing.';
+    } else if (confidence >= 0.48) {
+      state = 'HOLD';
+      rationale = 'Position is defensible but not clear enough to commit. Maintain without advancing. Watch for the entropy-reducing signal.';
+    } else {
+      state = 'CONSULT';
+      rationale = 'Insufficient signal at current stake level. The gap between evidence and stakes requires outside input before action.';
+    }
+  }
+
+  kernelOutput = { state, confidence, entropy };
+
+  // Render
+  const badge = document.getElementById('resultBadge');
+  badge.textContent = state;
+  badge.className = `result-state-badge ${state}`;
+  document.getElementById('resultStateName').textContent = STATE_NAMES[state];
+  document.getElementById('resultConf').textContent = (confidence).toFixed(2);
+  document.getElementById('resultEntropy').textContent = entropy.toFixed(2);
+  document.getElementById('resultRationale').textContent = rationale;
+
+  document.getElementById('kernelIdle').style.display = 'none';
+  document.getElementById('kernelResult').classList.add('visible');
+}
+
+// ── PICKERS ────────────────────────────────────────────────────────────────
+function selectDomain(btn) {
+  document.querySelectorAll('.domain-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDomain = btn.dataset.domain;
+}
+
+function selectGut(btn) {
+  document.querySelectorAll('.state-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedGut = btn.dataset.state;
+  runKernel();
+}
+
+function selectAction(action) {
+  selectedAction = action;
+  document.getElementById('btnFollow').className   = 'action-btn' + (action === 'follow'   ? ' active-follow'   : '');
+  document.getElementById('btnOverride').className = 'action-btn' + (action === 'override' ? ' active-override' : '');
+
+  // Always show success criteria when an action is committed to
+  document.getElementById('successBlock').classList.add('visible');
+
+  // Default check-in date 7 days out
+  if (!document.getElementById('checkinDate').value) {
+    const d = new Date(); d.setDate(d.getDate() + 7);
+    document.getElementById('checkinDate').value = d.toISOString().split('T')[0];
+  }
+}
+
+function toggleOWD() {
+  owdActive = !owdActive;
+  document.getElementById('owdToggle').classList.toggle('active', owdActive);
+  runKernel();
+}
+
+// ── SAVE ───────────────────────────────────────────────────────────────────
+function saveEntry() {
+  if (!selectedDomain) { alert('Please select a domain.'); return; }
+  if (!selectedGut)    { alert('Please record your gut state before NERVA.'); return; }
+  const decisionText = document.getElementById('decisionText').value.trim();
+  if (!decisionText)   { alert('Please describe the decision.'); return; }
+  if (!selectedAction) { alert('Will you follow NERVA or override?'); return; }
+  if (!kernelOutput)   { runKernel(); }
+
+  const entry = {
+    id:            Date.now(),
+    date:          new Date().toISOString(),
+    domain:        selectedDomain,
+    decision:      decisionText,
+    gut:           selectedGut,
+    nerva:         kernelOutput.state,
+    confidence:    kernelOutput.confidence,
+    entropy:       kernelOutput.entropy,
+    stakes:        parseInt(document.getElementById('stakes').value) / 100,
+    evidence:      (parseInt(document.getElementById('evidence').value) - 50) / 50,
+    oneWayDoor:    owdActive,
+    action:        selectedAction,
+    success:       document.getElementById('successCriteria').value.trim(),
+    checkinDate:   document.getElementById('checkinDate').value,
+    notes:         document.getElementById('notesText').value.trim(),
+    outcome:       null,
+    outcomeDate:   null
+  };
+
+  // Load existing
+  const raw = localStorage.getItem('examen_v1');
+  const entries = raw ? JSON.parse(raw) : [];
+  entries.push(entry);
+  localStorage.setItem('examen_v1', JSON.stringify(entries));
+
+  // Show toast
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+
+  // Reset
+  setTimeout(resetForm, 600);
+}
+
+function resetForm() {
+  selectedDomain = selectedGut = selectedAction = null;
+  owdActive = false; kernelOutput = null;
+  document.querySelectorAll('.domain-btn, .state-btn, .action-btn').forEach(b => b.className = b.className.replace(/\s*active[\w-]*/g, ''));
+  document.getElementById('owdToggle').classList.remove('active');
+  document.getElementById('decisionText').value = '';
+  document.getElementById('notesText').value = '';
+  document.getElementById('successCriteria').value = '';
+  document.getElementById('checkinDate').value = '';
+  document.getElementById('entropy').value = 40;
+  document.getElementById('entropyVal').textContent = '0.40';
+  document.getElementById('stakes').value = 50;
+  document.getElementById('stakesVal').textContent = '0.50';
+  document.getElementById('evidence').value = 50;
+  document.getElementById('evidenceVal').textContent = '±0';
+  document.getElementById('kernelIdle').style.display = 'block';
+  document.getElementById('kernelResult').classList.remove('visible');
+  document.getElementById('gateWarning').classList.remove('visible');
+  document.getElementById('successBlock').classList.remove('visible');
+}
+
+// Initial compute
+runKernel();
+</script>
+</body>
+</html>

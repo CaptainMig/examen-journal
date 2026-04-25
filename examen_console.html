@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examen — Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=IBM+Plex+Mono:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0b0b10;
+    --surface:  #13131c;
+    --surface2: #1c1c28;
+    --border:   #2a2a3a;
+    --gold:     #c9a84c;
+    --gold-dim: #8a6f30;
+    --cream:    #f0ead6;
+    --muted:    #6b6b82;
+    --text:     #d4cfc4;
+
+    --commit:  #c9a84c;
+    --hold:    #5b8fa8;
+    --wait:    #7a9e7e;
+    --consult: #9b7ec8;
+    --toxic:   #b94040;
+
+    --r: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-mark { width: 34px; height: 34px; flex-shrink: 0; }
+  .logo-text { display: flex; flex-direction: column; line-height: 1; }
+  .logo-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 0.12em; }
+  .logo-sub  { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 3px; }
+
+  .header-stats { display: flex; gap: 24px; align-items: center; }
+  .hstat { text-align: center; }
+  .hstat-val { font-family: 'IBM Plex Mono', monospace; font-size: 18px; color: var(--gold); }
+  .hstat-lbl { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 2px; }
+
+  .header-link { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--gold-dim); text-decoration: none; letter-spacing: 0.1em; border: 1px solid var(--border); padding: 5px 10px; border-radius: 4px; }
+
+  /* ── TABS ────────────────────────────────── */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .tab {
+    padding: 14px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .tab .badge {
+    background: var(--toxic);
+    color: white;
+    font-size: 8px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ── MAIN LAYOUT ─────────────────────────── */
+  .content { max-width: 900px; margin: 0 auto; padding: 28px 24px; }
+
+  .pane { display: none; }
+  .pane.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ── SECTION LABEL ───────────────────────── */
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-label span { color: var(--gold); }
+
+  /* ── FILTER BAR ──────────────────────────── */
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filter-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+  .filter-btn.active { border-color: var(--gold); color: var(--gold); background: #1e1908; }
+
+  /* ── ENTRY CARD ──────────────────────────── */
+  .entry-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .entry-card:hover { border-color: var(--border); }
+
+  .entry-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .entry-state-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .entry-decision {
+    flex: 1;
+    font-size: 14px;
+    color: var(--cream);
+    line-height: 1.4;
+  }
+
+  .entry-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .meta-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .meta-tag.COMMIT  { border-color: var(--commit);  color: var(--commit);  background: #1e1908; }
+  .meta-tag.HOLD    { border-color: var(--hold);    color: var(--hold);    background: #0b1520; }
+  .meta-tag.WAIT    { border-color: var(--wait);    color: var(--wait);    background: #0d160e; }
+  .meta-tag.CONSULT { border-color: var(--consult); color: var(--consult); background: #160f20; }
+  .meta-tag.TOXIC   { border-color: var(--toxic);   color: var(--toxic);   background: #1c0a0a; }
+
+  .entry-action-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .entry-action-tag.follow   { background: #1a1706; color: var(--gold-dim); }
+  .entry-action-tag.override { background: #16102a; color: var(--consult); }
+
+  .entry-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  .entry-outcome-row {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .outcome-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .outcome-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--muted);
+  }
+  .outcome-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+  .outcome-btn.selected-worked   { border-color: var(--wait);   color: var(--wait);   background: #0d160e; }
+  .outcome-btn.selected-failed   { border-color: var(--toxic);  color: var(--toxic);  background: #1c0a0a; }
+  .outcome-btn.selected-ambig    { border-color: var(--hold);   color: var(--hold);   background: #0b1520; }
+
+  .outcome-badge {
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+  .outcome-badge.worked  { background: #0d160e; color: var(--wait);  border: 1px solid var(--wait); }
+  .outcome-badge.failed  { background: #1c0a0a; color: var(--toxic); border: 1px solid var(--toxic); }
+  .outcome-badge.ambig   { background: #0b1520; color: var(--hold);  border: 1px solid var(--hold); }
+
+  /* ── CHECK-IN CARD ───────────────────────── */
+  .checkin-card {
+    background: var(--surface);
+    border: 1px solid var(--toxic);
+    border-radius: var(--r);
+    padding: 16px;
+    margin-bottom: 12px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .checkin-decision { font-size: 14px; color: var(--cream); margin-bottom: 8px; }
+
+  .checkin-success {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: #0e0e17;
+    border-radius: 4px;
+    border-left: 2px solid var(--gold-dim);
+  }
+
+  /* ── CALIBRATION ─────────────────────────── */
+  .calib-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .calib-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 20px;
+  }
+
+  .calib-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .calib-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .calib-sub {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .verdict-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 24px;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .verdict-locked {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .verdict-lock-icon { font-size: 32px; }
+
+  .verdict-lock-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  .verdict-lock-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--border);
+    letter-spacing: 0.1em;
+    line-height: 1.8;
+  }
+
+  .verdict-active { display: none; }
+
+  .lift-bar-wrap {
+    background: #0e0e17;
+    border-radius: 4px;
+    height: 8px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .lift-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
+  .domain-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .domain-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .domain-row-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    width: 60px;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+
+  .domain-row-bar {
+    flex: 1;
+    background: #0e0e17;
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .domain-row-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--gold);
+  }
+
+  .domain-row-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--gold);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── MATH LAYER ──────────────────────────── */
+  .math-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 24px;
+    margin-bottom: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .math-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--gold);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .math-block {
+    background: #0e0e17;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    line-height: 2;
+    color: var(--muted);
+  }
+
+  .math-block code {
+    color: var(--cream);
+  }
+
+  .math-block .math-comment {
+    color: var(--muted);
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  .math-honesty {
+    background: #160f20;
+    border: 1px solid var(--consult);
+    border-radius: 6px;
+    padding: 16px;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+
+  .math-honesty strong { color: var(--consult); }
+
+  /* ── EMPTY STATE ─────────────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    border: 1px dashed var(--border);
+    border-radius: var(--r);
+  }
+
+  .empty-icon { font-size: 32px; margin-bottom: 16px; }
+
+  .empty-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .empty-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--border);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── DIVIDER ─────────────────────────────── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+    position: relative;
+  }
+  .divider::after {
+    content: '◆';
+    position: absolute; top: -8px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg);
+    color: var(--gold-dim);
+    font-size: 10px;
+    padding: 0 8px;
+  }
+
+  /* ── SCROLLBAR ───────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <svg class="logo-mark" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="18" r="16.5" stroke="#c9a84c" stroke-width="0.8" opacity="0.4"/>
+      <line x1="18" y1="1.5" x2="18" y2="4.5" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <line x1="18" y1="31.5" x2="18" y2="34.5" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <line x1="1.5" y1="18" x2="4.5" y2="18" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <line x1="31.5" y1="18" x2="34.5" y2="18" stroke="#c9a84c" stroke-width="1.2" opacity="0.7"/>
+      <line x1="28.3" y1="4.8" x2="27.0" y2="7.1" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <line x1="7.7" y1="4.8" x2="9.0" y2="7.1" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <line x1="28.3" y1="31.2" x2="27.0" y2="28.9" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <line x1="7.7" y1="31.2" x2="9.0" y2="28.9" stroke="#c9a84c" stroke-width="0.7" opacity="0.4"/>
+      <circle cx="18" cy="18" r="3.5" fill="#c9a84c" opacity="0.9"/>
+      <line x1="18" y1="18" x2="28" y2="12" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="18" y1="18" x2="10" y2="21.5" stroke="#c9a84c" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+      <line x1="13" y1="27" x2="23" y2="27" stroke="#c9a84c" stroke-width="0.8" opacity="0.35"/>
+      <line x1="18" y1="23" x2="18" y2="27" stroke="#c9a84c" stroke-width="0.8" opacity="0.35"/>
+      <circle cx="10" cy="28.5" r="3.5" stroke="#c9a84c" stroke-width="0.7" fill="none" opacity="0.35"/>
+      <circle cx="26" cy="28.5" r="3.5" stroke="#c9a84c" stroke-width="0.7" fill="none" opacity="0.35"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-name">EXAMEN</span>
+      <span class="logo-sub">Console · NERVA v9</span>
+    </div>
+  </div>
+
+  <div class="header-stats" id="headerStats">
+    <div class="hstat">
+      <div class="hstat-val" id="statTotal">0</div>
+      <div class="hstat-lbl">Entries</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-val" id="statScored">0</div>
+      <div class="hstat-lbl">Scored</div>
+    </div>
+    <div class="hstat">
+      <div class="hstat-val" id="statLift">—</div>
+      <div class="hstat-lbl">Lift</div>
+    </div>
+  </div>
+
+  <a class="header-link" href="examen_capture.html">← Capture</a>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab" id="tab-checkins" onclick="switchTab('checkins')">
+    Check-ins <span class="badge" id="checkinBadge" style="display:none">0</span>
+  </div>
+  <div class="tab active" id="tab-journal" onclick="switchTab('journal')">Journal</div>
+  <div class="tab" id="tab-calibration" onclick="switchTab('calibration')">Calibration</div>
+  <div class="tab" id="tab-math" onclick="switchTab('math')">Math Layer</div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- ── CHECK-INS PANE ──────────────────── -->
+  <div class="pane" id="pane-checkins">
+    <div class="section-label"><span>Due</span>Check-in Queue</div>
+    <div id="checkinList"></div>
+  </div>
+
+  <!-- ── JOURNAL PANE ────────────────────── -->
+  <div class="pane active" id="pane-journal">
+    <div class="filter-bar" id="domainFilter">
+      <button class="filter-btn active" data-domain="All" onclick="filterJournal(this)">All</button>
+      <button class="filter-btn" data-domain="Money" onclick="filterJournal(this)">⚖️ Money</button>
+      <button class="filter-btn" data-domain="People" onclick="filterJournal(this)">🤝 People</button>
+      <button class="filter-btn" data-domain="Time" onclick="filterJournal(this)">🕐 Time</button>
+      <button class="filter-btn" data-domain="Voice" onclick="filterJournal(this)">📣 Voice</button>
+      <button class="filter-btn" data-domain="Body" onclick="filterJournal(this)">⚡ Body</button>
+    </div>
+    <div id="journalList"></div>
+  </div>
+
+  <!-- ── CALIBRATION PANE ────────────────── -->
+  <div class="pane" id="pane-calibration">
+
+    <div class="calib-grid" id="calibStats">
+      <div class="calib-card">
+        <div class="calib-title">Follow NERVA · Hit Rate</div>
+        <div class="calib-number" id="followRate">—</div>
+        <div class="calib-sub" id="followCount">no data yet</div>
+      </div>
+      <div class="calib-card">
+        <div class="calib-title">Override NERVA · Hit Rate</div>
+        <div class="calib-number" id="overrideRate">—</div>
+        <div class="calib-sub" id="overrideCount">no data yet</div>
+      </div>
+    </div>
+
+    <div class="section-label"><span>Falsification</span>Verdict</div>
+    <div class="verdict-panel" id="verdictPanel">
+      <div class="verdict-locked" id="verdictLocked">
+        <div class="verdict-lock-icon">🔒</div>
+        <div class="verdict-lock-title">Verdict locked until sufficient data</div>
+        <div class="verdict-lock-sub" id="verdictProgress">
+          — / 10 scored outcomes required<br>
+          — / 3 override entries required
+        </div>
+      </div>
+      <div class="verdict-active" id="verdictActive">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">NERVA Lift Score</div>
+        <div style="font-family:'Playfair Display',serif;font-size:48px;color:var(--gold);margin-bottom:8px" id="liftNumber">—</div>
+        <div style="font-size:13px;color:var(--text);margin-bottom:20px" id="liftVerdict"></div>
+        <div class="lift-bar-wrap">
+          <div class="lift-bar" id="liftBar" style="width:50%;background:var(--gold)"></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);display:flex;justify-content:space-between">
+          <span>−1.0 (NERVA hurts)</span>
+          <span>0.0</span>
+          <span>+1.0 (NERVA adds signal)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label"><span>By Domain</span>Hit Rate Breakdown</div>
+    <div class="domain-breakdown" id="domainBreakdown"></div>
+
+  </div>
+
+  <!-- ── MATH LAYER PANE ─────────────────── -->
+  <div class="pane" id="pane-math">
+
+    <div class="math-panel">
+      <div class="math-title">NERVA Kernel — State Classification Logic</div>
+
+      <div class="math-block">
+        <code>// ── INPUTS</code><br>
+        <code>entropy  ∈ [0,1]  </code><span class="math-comment">// von Neumann analog — uncertainty of the decision state</span><br>
+        <code>stakes   ∈ [0,1]  </code><span class="math-comment">// consequence magnitude</span><br>
+        <code>evidence ∈ [-1,1] </code><span class="math-comment">// signed evidence balance (for − against)</span><br>
+        <code>owd      ∈ {0,1}  </code><span class="math-comment">// one-way door: irreversibility flag</span>
+      </div>
+
+      <div class="math-block">
+        <code>// ── KERNEL DERIVATION</code><br>
+        <code>posture    = (evidence + 1) / 2              </code><span class="math-comment">// normalize evidence to [0,1]</span><br>
+        <code>confidence = posture × (1 − entropy)         </code><span class="math-comment">// certainty-weighted conviction</span>
+      </div>
+
+      <div class="math-block">
+        <code>// ── STATE CLASSIFICATION</code><br>
+        <code>if owd AND confidence &lt; 0.70 AND stakes &gt; 0.5</code><br>
+        <code>&nbsp;&nbsp;→ CONSULT                              </code><span class="math-comment">// One-Way Brake</span><br>
+        <code>elif confidence ≥ 0.72 AND entropy &lt; 0.45</code><br>
+        <code>&nbsp;&nbsp;→ COMMIT</code><br>
+        <code>elif stakes &lt; 0.25 AND entropy &gt; 0.55</code><br>
+        <code>&nbsp;&nbsp;→ WAIT</code><br>
+        <code>elif confidence &lt; 0.30 AND stakes &gt; 0.65</code><br>
+        <code>&nbsp;&nbsp;→ TOXIC</code><br>
+        <code>elif confidence ≥ 0.48</code><br>
+        <code>&nbsp;&nbsp;→ HOLD</code><br>
+        <code>else</code><br>
+        <code>&nbsp;&nbsp;→ CONSULT</code>
+      </div>
+
+      <div class="math-block">
+        <code>// ── REBOUND / CALIBRATION</code><br>
+        <code>lift = follow_hit_rate − override_hit_rate    </code><span class="math-comment">// falsification metric</span><br>
+        <code>lift &gt; +0.20 → NERVA adds signal</code><br>
+        <code>lift ∈ [−0.10, +0.10] → mirrors gut only</code><br>
+        <code>lift &lt; −0.10 → NERVA degrades judgment</code>
+      </div>
+
+      <div class="math-block">
+        <code>// ── DENSITY MATRIX ANALOG</code><br>
+        <code>ρ = Σᵢ pᵢ |ψᵢ⟩⟨ψᵢ|</code>&nbsp;&nbsp;<span class="math-comment">// mixed decision state</span><br>
+        <code>S(ρ) = −Tr(ρ log ρ)  </code><span class="math-comment">// von Neumann entropy; maps to entropy input</span><br>
+        <code>Bloch vector r = (⟨σₓ⟩, ⟨σᵧ⟩, ⟨σᵤ⟩)</code><br>
+        <code>|r| → 1: pure state (COMMIT or TOXIC)</code><br>
+        <code>|r| → 0: mixed state (WAIT or CONSULT)</code>
+      </div>
+
+      <div class="math-honesty">
+        <strong>Epistemic Disclosure</strong><br><br>
+        The NERVA kernel is a <strong>heuristic scoring model</strong>, not a derivation from quantum information axioms. 
+        The density matrix and Bloch sphere provide a rigorous mathematical vocabulary for decision uncertainty 
+        — entropy, superposition, mixed states — but the specific thresholds (0.72, 0.48, etc.) 
+        were calibrated by judgment, not measurement. The kernel is the scale's needle (examen), 
+        not the weight of the objects on the pan.<br><br>
+        The falsification criterion — lift &gt; +0.20 over ≥10 scored outcomes with ≥3 overrides — 
+        is pre-committed and immovable. That is the science.
+      </div>
+    </div>
+
+    <div class="math-panel">
+      <div class="math-title">The Five States — Operational Definitions</div>
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:12px;line-height:1.7">
+        <div><span style="color:var(--commit);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em">COMMIT</span>&nbsp;&nbsp; Act. Evidence leans clearly for, entropy is manageable, confidence is high. The needle tips.</div>
+        <div><span style="color:var(--hold);  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em">HOLD</span>&nbsp;&nbsp;&nbsp;&nbsp; Keep position. Defensible but not clear enough. Maintain without advancing. Watch for the entropy-reducing signal.</div>
+        <div><span style="color:var(--wait);  font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em">WAIT</span>&nbsp;&nbsp;&nbsp;&nbsp; Stand down. Low stakes and high noise: the cost of waiting is lower than the cost of being wrong.</div>
+        <div><span style="color:var(--consult);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em">CONSULT</span>&nbsp; Seek counsel — your wife, your advisor, your coach, your confessor, the data you don't have yet.</div>
+        <div><span style="color:var(--toxic); font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em">TOXIC</span>&nbsp;&nbsp;&nbsp; Walk away. Bad regardless of upside. High stakes, low confidence, evidence against. Expected value is negative.</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = 'examen_v1';
+const STATE_COLORS = { COMMIT: '#c9a84c', HOLD: '#5b8fa8', WAIT: '#7a9e7e', CONSULT: '#9b7ec8', TOXIC: '#b94040' };
+
+let currentFilter  = 'All';
+let activeTab      = 'journal';
+
+// ── LOAD ──────────────────────────────────────────────────────────────────
+function loadEntries() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveEntries(entries) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+}
+
+// ── FORMAT DATE ───────────────────────────────────────────────────────────
+function fmtDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function isOverdue(dateStr) {
+  if (!dateStr) return false;
+  return new Date(dateStr) <= new Date();
+}
+
+// ── TAB SWITCH ────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('pane-' + tab).classList.add('active');
+  renderAll();
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function filterJournal(btn) {
+  currentFilter = btn.dataset.domain;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderJournal(loadEntries());
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────
+function renderAll() {
+  const entries = loadEntries();
+  updateHeaderStats(entries);
+  renderCheckins(entries);
+  renderJournal(entries);
+  renderCalibration(entries);
+}
+
+// ── HEADER STATS ──────────────────────────────────────────────────────────
+function updateHeaderStats(entries) {
+  const scored = entries.filter(e => e.outcome && e.outcome !== 'deferred');
+  document.getElementById('statTotal').textContent  = entries.length;
+  document.getElementById('statScored').textContent = scored.length;
+
+  const { lift } = computeCalibration(entries);
+  document.getElementById('statLift').textContent = lift !== null ? (lift >= 0 ? '+' : '') + lift.toFixed(2) : '—';
+
+  // Badge
+  const overdue = entries.filter(e => !e.outcome && isOverdue(e.checkinDate));
+  const badge = document.getElementById('checkinBadge');
+  if (overdue.length > 0) {
+    badge.textContent = overdue.length;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── CHECKINS ──────────────────────────────────────────────────────────────
+function renderCheckins(entries) {
+  const list = document.getElementById('checkinList');
+  const due = entries.filter(e => !e.outcome && isOverdue(e.checkinDate) && e.checkinDate);
+
+  if (due.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">✓</div>
+        <div class="empty-title">All clear</div>
+        <div class="empty-sub">No check-ins due today</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = due.map(e => `
+    <div class="checkin-card" id="cc-${e.id}">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <span class="meta-tag ${e.nerva}">${e.nerva}</span>
+        <span class="meta-tag">${e.domain}</span>
+        <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted)">${fmtDate(e.checkinDate)} check-in</span>
+      </div>
+      <div class="checkin-decision">${e.decision}</div>
+      ${e.success ? `<div class="checkin-success">Success criterion: "${e.success}"</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)">Outcome:</span>
+        <button class="outcome-btn" onclick="scoreEntry(${e.id}, 'worked')">✓ Worked</button>
+        <button class="outcome-btn" onclick="scoreEntry(${e.id}, 'failed')">✗ Didn't work</button>
+        <button class="outcome-btn" onclick="scoreEntry(${e.id}, 'ambig')">~ Ambiguous</button>
+        <button class="outcome-btn" onclick="deferEntry(${e.id})">↷ Defer 7d</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── JOURNAL ───────────────────────────────────────────────────────────────
+function renderJournal(entries) {
+  const list = document.getElementById('journalList');
+  const filtered = currentFilter === 'All' ? entries : entries.filter(e => e.domain === currentFilter);
+  const sorted = [...filtered].reverse();
+
+  if (sorted.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📓</div>
+        <div class="empty-title">No entries yet</div>
+        <div class="empty-sub">Open the capture app and log your first decision</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(e => {
+    const outcomeHTML = e.outcome ? `
+      <div class="entry-outcome-row">
+        <span class="outcome-label">Outcome:</span>
+        <span class="outcome-badge ${e.outcome}">${e.outcome === 'worked' ? '✓ Worked' : e.outcome === 'failed' ? '✗ Didn\'t work' : '~ Ambiguous'}</span>
+      </div>` : (e.checkinDate ? `
+      <div class="entry-outcome-row">
+        <span class="outcome-label">Check-in:</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted)">${fmtDate(e.checkinDate)}</span>
+        <button class="outcome-btn" onclick="scoreEntry(${e.id}, 'worked')">✓ Worked</button>
+        <button class="outcome-btn" onclick="scoreEntry(${e.id}, 'failed')">✗ Failed</button>
+        <button class="outcome-btn" onclick="scoreEntry(${e.id}, 'ambig')">~ Ambig</button>
+      </div>` : '');
+
+    return `
+      <div class="entry-card">
+        <div class="entry-top">
+          <div class="entry-state-dot" style="background:${STATE_COLORS[e.nerva]}"></div>
+          <div class="entry-decision">${e.decision}</div>
+        </div>
+        <div class="entry-meta">
+          <span class="meta-tag ${e.nerva}">${e.nerva}</span>
+          <span class="meta-tag">${e.domain}</span>
+          ${e.gut !== e.nerva ? `<span class="meta-tag" title="gut vs NERVA">gut: ${e.gut}</span>` : ''}
+          <span class="entry-action-tag ${e.action}">${e.action === 'follow' ? '🎯 follow' : '🔀 override'}</span>
+          ${e.oneWayDoor ? '<span class="meta-tag" style="border-color:#b94040;color:#b94040">🚪 one-way</span>' : ''}
+          <span class="entry-date">${fmtDate(e.date)}</span>
+        </div>
+        ${outcomeHTML}
+      </div>`;
+  }).join('');
+}
+
+// ── CALIBRATION ───────────────────────────────────────────────────────────
+function computeCalibration(entries) {
+  const scored = entries.filter(e => e.outcome && e.outcome !== 'deferred');
+  const followed  = scored.filter(e => e.action === 'follow');
+  const overridden = scored.filter(e => e.action === 'override');
+
+  const hitRate = arr => {
+    const hits = arr.filter(e => e.outcome === 'worked').length;
+    return arr.length ? hits / arr.length : null;
+  };
+
+  const followHR   = hitRate(followed);
+  const overrideHR = hitRate(overridden);
+  const lift = (followHR !== null && overrideHR !== null) ? followHR - overrideHR : null;
+
+  return { scored, followed, overridden, followHR, overrideHR, lift };
+}
+
+function renderCalibration(entries) {
+  const { scored, followed, overridden, followHR, overrideHR, lift } = computeCalibration(entries);
+  const overrideCount = entries.filter(e => e.action === 'override').length;
+
+  // Stats cards
+  document.getElementById('followRate').textContent   = followHR   !== null ? Math.round(followHR * 100)   + '%' : '—';
+  document.getElementById('overrideRate').textContent = overrideHR !== null ? Math.round(overrideHR * 100) + '%' : '—';
+  document.getElementById('followCount').textContent   = `${followed.length} scored follow entries`;
+  document.getElementById('overrideCount').textContent = `${overridden.length} scored override entries`;
+
+  // Verdict lock/unlock
+  const meetsThreshold = scored.length >= 10 && overrideCount >= 3;
+
+  document.getElementById('verdictLocked').style.display  = meetsThreshold ? 'none' : 'flex';
+  document.getElementById('verdictActive').style.display  = meetsThreshold ? 'block' : 'none';
+
+  document.getElementById('verdictProgress').innerHTML =
+    `${scored.length} / 10 scored outcomes required<br>${overrideCount} / 3 override entries required`;
+
+  if (meetsThreshold && lift !== null) {
+    const pct = Math.round(lift * 100);
+    document.getElementById('liftNumber').textContent = (lift >= 0 ? '+' : '') + pct + '%';
+    let verdict;
+    if (lift > 0.20)       verdict = 'NERVA adds real signal. The framework earns its place.';
+    else if (lift > 0.05)  verdict = 'Modest lift. NERVA reflects your gut with minor improvement.';
+    else if (lift > -0.10) verdict = 'Neutral. NERVA mirrors your intuition — useful as discipline, not as signal.';
+    else                   verdict = 'NERVA is hurting judgment. Recalibrate the thresholds or abandon.';
+    document.getElementById('liftVerdict').textContent = verdict;
+
+    // Bar: 0% lift = 50% bar width
+    const barPct = Math.max(0, Math.min(100, 50 + lift * 50));
+    document.getElementById('liftBar').style.width = barPct + '%';
+    document.getElementById('liftBar').style.background = lift > 0.10 ? 'var(--wait)' : lift < -0.10 ? 'var(--toxic)' : 'var(--hold)';
+  }
+
+  // Domain breakdown
+  const domains = ['Money', 'People', 'Time', 'Voice', 'Body'];
+  const bk = document.getElementById('domainBreakdown');
+  bk.innerHTML = domains.map(d => {
+    const de = scored.filter(e => e.domain === d);
+    if (de.length === 0) return `
+      <div class="domain-row">
+        <span class="domain-row-name">${d}</span>
+        <div class="domain-row-bar"><div class="domain-row-fill" style="width:0%"></div></div>
+        <span class="domain-row-val" style="color:var(--muted)">—</span>
+      </div>`;
+    const hr = de.filter(e => e.outcome === 'worked').length / de.length;
+    return `
+      <div class="domain-row">
+        <span class="domain-row-name">${d}</span>
+        <div class="domain-row-bar"><div class="domain-row-fill" style="width:${Math.round(hr*100)}%"></div></div>
+        <span class="domain-row-val">${Math.round(hr * 100)}%</span>
+      </div>`;
+  }).join('');
+}
+
+// ── SCORE ENTRY ───────────────────────────────────────────────────────────
+function scoreEntry(id, outcome) {
+  const entries = loadEntries();
+  const idx = entries.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  entries[idx].outcome = outcome;
+  entries[idx].outcomeDate = new Date().toISOString();
+  saveEntries(entries);
+  renderAll();
+}
+
+function deferEntry(id) {
+  const entries = loadEntries();
+  const idx = entries.findIndex(e => e.id === id);
+  if (idx === -1) return;
+  const d = new Date(); d.setDate(d.getDate() + 7);
+  entries[idx].checkinDate = d.toISOString().split('T')[0];
+  saveEntries(entries);
+  renderAll();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderAll();
+
+// Auto-switch to check-ins if there are overdue items
+const entries = loadEntries();
+const overdue = entries.filter(e => !e.outcome && isOverdue(e.checkinDate) && e.checkinDate);
+if (overdue.length > 0) switchTab('checkins');
+</script>
+</body>
+</html>
