@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/examen_capture.html" },
+    { "source": "/console", "destination": "/examen_console.html" }
+  ]
+}
