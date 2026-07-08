@@ -292,7 +292,10 @@
               <input type="range" data-k="T" min="0" max="1" step="0.05" value="0.3" aria-label="Time pressure">
               <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>no deadline</span><span>window closing</span></div>
             </div>
-            <label id="doorWrap" style="display:flex;align-items:center;gap:13px;border:1px solid rgba(11,18,32,.12);border-radius:12px;padding:13px 14px;cursor:pointer;user-select:none;transition:all .15s;margin-bottom:10px">
+            <!-- position:relative keeps the hidden absolute checkbox's containing block here —
+                 without it the checkbox overflows the app shell and label-click focus scrolls
+                 the whole app out of view on desktop (overflow:hidden shell) -->
+            <label id="doorWrap" style="position:relative;display:flex;align-items:center;gap:13px;border:1px solid rgba(11,18,32,.12);border-radius:12px;padding:13px 14px;cursor:pointer;user-select:none;transition:all .15s;margin-bottom:10px">
               <input type="checkbox" id="oneWay" style="position:absolute;opacity:0;pointer-events:none">
               <span id="doorSwitch" style="width:40px;height:23px;border-radius:12px;background:#E7E4D9;border:1px solid rgba(11,18,32,.12);position:relative;flex-shrink:0;transition:background .15s"><span id="doorKnob" style="position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#5F5E5A;transition:all .15s"></span></span>
               <span><b style="font:600 14px Inter;display:block">One-Way Door</b><span style="font-family:'Newsreader',serif;font-style:italic;font-size:12.5px;color:#5F5E5A">cannot be undone once taken</span></span>
