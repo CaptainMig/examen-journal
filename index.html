@@ -189,7 +189,7 @@
           <div id="orbWrap"><canvas id="orb" style="width:100%;max-width:270px;height:270px;display:block;margin:0 auto"></canvas></div>
 
           <!-- plain-language readout for the blue ring (coherence arc) -->
-          <div id="cohPlain" class="compactHide" style="text-align:center;font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:rgba(148,178,220,.78);margin:-4px auto 4px;max-width:320px">Blue ring = how clear your signal is: <b id="cohPct" style="font-style:normal;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94B2DC">48%</b> · <span id="cohWord">mostly clear</span></div>
+          <div id="cohPlain" class="compactHide" style="text-align:center;font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:rgba(148,178,220,.78);margin:-4px auto 4px;max-width:320px">The blue ring shows how clear your signal is — <b id="cohPct" style="font-style:normal;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94B2DC">48%</b> · <span id="cohWord">mostly clear</span></div>
 
           <div style="text-align:center;margin-top:-2px">
             <div id="vWord" style="font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:.01em;line-height:1;color:#F1EFE8">—</div>
@@ -231,6 +231,7 @@
               <div style="font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.42)">r mixed<b id="tR" style="display:block;font-size:13px;font-weight:500;color:#F1EFE8;margin-top:1px">.000</b></div>
               <div style="font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.42)">S vN<b id="tSvn" style="display:block;font-size:13px;font-weight:500;color:#F1EFE8;margin-top:1px">.000</b></div>
               <div style="font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.42)">floor<b id="tFloor" style="display:block;font-size:13px;font-weight:500;color:#F1EFE8;margin-top:1px">.55</b></div>
+              <div style="grid-column:1/-1;font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.28);margin-top:2px">raw measurements — reference only</div>
             </div>
           </div>
 
@@ -322,6 +323,19 @@
         <div style="margin-bottom:22px">
           <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:6px">How will you know this worked? <span style="color:#C8841C">— be falsifiable</span></div>
           <textarea id="d_falsify" rows="2" placeholder="A concrete, checkable outcome…"></textarea>
+        </div>
+
+        <div style="margin-bottom:22px">
+          <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:6px">What do you expect to happen? <span style="color:#a89f8c">· optional</span></div>
+          <textarea id="d_predict" rows="2" placeholder="The outcome you would bet on…"></textarea>
+          <div style="font:500 12.5px Inter;color:#8a8880;margin:16px 0 10px">How sure are you? <span style="color:#a89f8c">· optional</span></div>
+          <div id="predConf" style="display:flex;gap:7px">
+            <button class="pconf" data-v="20" style="flex:1;font:500 13px Inter;padding:9px 0;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">20%</button>
+            <button class="pconf" data-v="40" style="flex:1;font:500 13px Inter;padding:9px 0;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">40%</button>
+            <button class="pconf" data-v="60" style="flex:1;font:500 13px Inter;padding:9px 0;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">60%</button>
+            <button class="pconf" data-v="80" style="flex:1;font:500 13px Inter;padding:9px 0;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">80%</button>
+            <button class="pconf" data-v="95" style="flex:1;font:500 13px Inter;padding:9px 0;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">95%</button>
+          </div>
         </div>
 
         <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:22px">
@@ -507,7 +521,7 @@ const PRESETS=[
 
 /* ═══════════ state ═══════════ */
 const sv={E:0,P:0.5,H:0.4,PHI:0.2,S:0.5,B:0.2,T:0.3,oneWay:false};
-const sel={domain:null,gut:null,action:null};
+const sel={domain:null,gut:null,action:null,predConf:null};
 let k=null, entries=[], raf=null;
 const disp={Eeff:0,C:0.48,rMixed:0,conf:0,svn:0,phi:0.2,H:0.4,floor:0.55,markerX:50};
 const target={Eeff:0,C:0.48,rMixed:0,conf:0,svn:0,phi:0.2,H:0.4,floor:0.55,markerX:50};
@@ -784,6 +798,8 @@ function wire(){
     if(g){ pickGut(g); return; }
     const ab=e.target.closest("#actionRow .actbtn");
     if(ab){ pickAction(ab); return; }
+    const pf=e.target.closest("#predConf .pconf");
+    if(pf){ pickPredConf(pf); return; }
     const pc=e.target.closest(".presetChip");
     if(pc){ applyPreset(+pc.dataset.preset); return; }
     const tb=e.target.closest(".tabbtn");
@@ -835,6 +851,14 @@ function pickAction(b){
   b.style.background=follow?"#C8841C":"#0B1220"; b.style.color=follow?"#0B1220":"#F1EFE8"; b.style.borderColor=follow?"#C8841C":"#0B1220";
   b.querySelector("small").style.color=follow?"rgba(11,18,32,.6)":"rgba(241,239,232,.6)";
   sel.action=b.dataset.v; validate();
+}
+
+// optional field: tapping the selected pill again clears it
+function pickPredConf(b){
+  const v=+b.dataset.v, same=sel.predConf===v;
+  sel.predConf=same?null:v;
+  root.querySelectorAll("#predConf .pconf").forEach(c=>{c.style.background="transparent";c.style.color="#0B1220";c.style.borderColor="rgba(11,18,32,.14)";});
+  if(!same){ b.style.background="#C8841C"; b.style.color="#0B1220"; b.style.borderColor="#C8841C"; }
 }
 
 function fillPct(el){const min=+el.min,max=+el.max,v=+el.value;return (v-min)/(max-min)*100;}
@@ -898,7 +922,7 @@ function demoSeed(){
     mk({ts:new Date(now-22*day).toISOString(),domain:"voice",decision:"Ask for the raise before review season.",gut:"WAIT",verdict:"CONSULT",confidence:0.13,coherence:0.41,action:"override",falsification:"A clear yes/no on the number within the month.",checkin:new Date(now-6*day).toISOString().slice(0,10),outcome:"mixed",scored:true}),
     mk({ts:new Date(now-26*day).toISOString(),domain:"money",decision:"Sell the index position to fund the move.",gut:"WAIT",verdict:"HOLD",confidence:0.47,coherence:0.55,action:"follow",falsification:"Portfolio intact and the move funded another way.",checkin:new Date(now-8*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
     mk({ts:new Date(now-31*day).toISOString(),domain:"people",decision:"Say yes to being the maid of honor.",gut:"COMMIT",verdict:"COMMIT",confidence:0.66,coherence:0.72,action:"follow",falsification:"No resentment about the time cost by the wedding.",checkin:new Date(now-14*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
-    mk({ts:new Date(now-4*day).toISOString(),domain:"body",decision:"Rest the injury instead of racing.",gut:"COMMIT",verdict:"WAIT",confidence:0.54,coherence:0.48,action:"follow",falsification:"Pain-free and cleared to train within a week.",checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:null,scored:false})
+    mk({ts:new Date(now-4*day).toISOString(),domain:"body",decision:"Rest the injury instead of racing.",gut:"COMMIT",verdict:"WAIT",confidence:0.54,coherence:0.48,action:"follow",falsification:"Pain-free and cleared to train within a week.",prediction:"A week of rest and I am back on the trail without the ache.",predictionConfidence:60,checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:null,scored:false})
   ];
 }
 function clearDemo(){
@@ -916,6 +940,7 @@ function logEntry(){
     eEff:+k.Eeff.toFixed(3), rMixed:+k.rMixed.toFixed(4), vnEntropy:+k.svn.toFixed(4),
     rulesEngaged:Object.keys(k.rules).filter(r=>k.rules[r]),
     action:sel.action, falsification:$("d_falsify").value.trim(),
+    prediction:$("d_predict").value.trim(), predictionConfidence:sel.predConf,
     checkin:$("d_checkin").value, notes:$("d_notes").value.trim(),
     outcome:null, scored:false, kernelVersion:K.version
   };
@@ -951,8 +976,9 @@ function renderReview(){
           <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:${vc};font-weight:700">${e.verdict}</span>
         </div>
         <div style="font-family:'Newsreader',serif;font-size:18px;line-height:1.3;margin:8px 0 6px">${esc(e.decision)}</div>
-        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#5F5E5A;border-left:2px solid rgba(11,18,32,.14);padding-left:10px">Test: ${esc(e.falsification)}</div>
-        <div style="font:500 11.5px Inter;color:#8a8880;margin:14px 0 8px">Did it work?</div>
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#5F5E5A;border-left:2px solid rgba(11,18,32,.14);padding-left:10px">Your test: ${esc(e.falsification)}</div>
+        ${e.prediction?`<div style="font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#5F5E5A;margin-top:9px">You expected: ${esc(e.prediction)}${e.predictionConfidence?` <span style="font-family:'JetBrains Mono',monospace;font-style:normal;font-size:10px;color:#a89f8c">${e.predictionConfidence}% sure</span>`:""}</div>`:""}
+        <div style="font:500 11.5px Inter;color:#8a8880;margin:14px 0 8px">How did this age?</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
           <button class="scoreBtn" data-id="${e.id}" data-outcome="worked" style="font:600 13px Inter;padding:10px 4px;border:1px solid rgba(11,18,32,.15);border-radius:10px;background:transparent;color:#1F8A5B;cursor:pointer">Worked</button>
           <button class="scoreBtn" data-id="${e.id}" data-outcome="mixed" style="font:600 13px Inter;padding:10px 4px;border:1px solid rgba(11,18,32,.15);border-radius:10px;background:transparent;color:#9B7B3A;cursor:pointer">Mixed</button>
