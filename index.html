@@ -170,9 +170,13 @@
 
           <div id="orbWrap"><canvas id="orb" style="width:100%;max-width:270px;height:270px;display:block;margin:0 auto"></canvas></div>
 
-          <div style="text-align:center;margin-top:-6px">
+          <!-- plain-language readout for the blue ring (coherence arc) -->
+          <div id="cohPlain" class="compactHide" style="text-align:center;font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:rgba(148,178,220,.78);margin:-4px auto 4px;max-width:320px">Blue ring = how clear your signal is: <b id="cohPct" style="font-style:normal;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94B2DC">48%</b> · <span id="cohWord">mostly clear</span></div>
+
+          <div style="text-align:center;margin-top:-2px">
             <div id="vWord" style="font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:.01em;line-height:1;color:#F1EFE8">—</div>
             <div id="vReason" class="compactHide" style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:rgba(241,239,232,.62);margin:9px auto 0;max-width:320px;min-height:40px">Pick your gut read to arm the instrument — then describe the situation with the sliders below. The reading updates live as you drag.</div>
+            <div class="compactHide"><button id="bottleneck" style="display:none;background:none;border:none;border-bottom:1px dotted rgba(241,239,232,.35);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:rgba(241,239,232,.55);margin:8px auto 0;padding:2px 3px"></button></div>
           </div>
 
           <!-- verdict spectrum -->
@@ -473,6 +477,73 @@ function runKernel(s){
   return {verdict,reason,rules,conf,rMixed,svn,Eeff,C,commitFloor};
 }
 
+/* ═══════════ legibility layer — display only; kernel math, constants and logged values untouched ═══════════ */
+const FACTOR_NAME={E:"Evidence",P:"Provenance",H:"Uncertainty",PHI:"Interference"};
+const RULE_NAME={brake:"One-Way Brake",desolation:"Desolation",blast:"Blast Consult",urgency:"Urgency"};
+const RULE_TARGET={brake:"oneWay",desolation:"PHI",blast:"B",urgency:"T"};
+const SENS_KEYS=["E","P","H","PHI","S","B","T"];
+
+// Bottleneck: the kernel is multiplicative, so one weak factor caps conf no matter what the
+// others do. Probe counterfactually — conf gain if each factor alone were at its ideal —
+// and name the factor with the largest gain as the binding constraint.
+function updateBottleneck(){
+  const el=$("bottleneck"); if(!el) return;
+  if(!k){ el.style.display="none"; return; }
+  // binding rule = the last one the kernel applied (application order: desolation → brake →
+  // blast → urgency; each later rule overwrites the verdict, so the last flagged one binds)
+  const rule=["urgency","blast","brake","desolation"].find(r=>k.rules[r]);
+  if(rule){
+    el.textContent="held by rule: "+RULE_NAME[rule];
+    el.dataset.target=RULE_TARGET[rule];
+    el.style.display="inline-block";
+    return;
+  }
+  if(k.verdict==="COMMIT"){ el.style.display="none"; return; }
+  const trials=[
+    {key:"E",  patch:{E:sv.E===0?1:(sv.E>0?1:-1)}, dist:1-Math.abs(sv.E)},
+    {key:"P",  patch:{P:1},   dist:1-sv.P},
+    {key:"H",  patch:{H:0},   dist:sv.H},
+    {key:"PHI",patch:{PHI:0}, dist:sv.PHI}
+  ];
+  let bestKey=null,bestGain=0;
+  for(const t of trials){
+    if(t.dist<=0.05) continue; // already within 0.05 of ideal — can't be the bottleneck
+    const gain=runKernel(Object.assign({},sv,t.patch)).conf-k.conf;
+    if(gain>bestGain){ bestGain=gain; bestKey=t.key; }
+  }
+  if(!bestKey||bestGain<0.08){ el.style.display="none"; return; }
+  el.textContent="held down by: "+FACTOR_NAME[bestKey];
+  el.dataset.target=bestKey;
+  el.style.display="inline-block";
+}
+
+// Tap the bottleneck line → scroll to and pulse the named control (reuses the nudge pulse).
+function pulseControl(target){
+  let el;
+  if(target==="oneWay") el=$("doorWrap");
+  else{ const inp=root.querySelector(`input[data-k="${target}"]`); el=inp&&inp.parentElement; }
+  if(!el) return;
+  el.scrollIntoView({behavior:REDUCED?"auto":"smooth",block:"center"});
+  if(!REDUCED){ el.classList.remove("nudge"); void el.offsetWidth; el.classList.add("nudge"); setTimeout(()=>el.classList.remove("nudge"),1600); }
+}
+
+// Sensitivity glow: |Δconf| for a ±0.10 move of each slider, mapped to its value label's
+// color. 14 extra kernel calls per recompute — trivial arithmetic; runs in the input
+// handler, never the rAF loop.
+function updateSensitivity(){
+  const base=runKernel(sv).conf;
+  for(const key of SENS_KEYS){
+    const lab=$("v_"+key); if(!lab) continue;
+    const lo=key==="E"?-1:0;
+    const up=runKernel(Object.assign({},sv,{[key]:Math.min(1,sv[key]+0.10)})).conf;
+    const dn=runKernel(Object.assign({},sv,{[key]:Math.max(lo,sv[key]-0.10)})).conf;
+    const d=Math.max(Math.abs(up-base),Math.abs(dn-base));
+    if(d>=0.04){ lab.style.color="#C8841C"; lab.style.opacity="1"; }        // high — full amber
+    else if(d>=0.015){ lab.style.color="#a9824f"; lab.style.opacity="1"; }  // moderate — mid tone
+    else{ lab.style.color="#8a8880"; lab.style.opacity="0.6"; }             // vetoed/inert — dim slate
+  }
+}
+
 /* ═══════════ recompute + verdict UI ═══════════ */
 function styleRule(el,on){
   el.style.borderColor=on?"#C8841C":"rgba(241,239,232,.14)";
@@ -489,6 +560,7 @@ function recompute(){
     $("vDiverge").style.display="none";
     root.querySelectorAll(".krule").forEach(r=>styleRule(r,false));
     root.querySelectorAll("[data-seg]").forEach(sg=>{sg.style.color="rgba(241,239,232,.4)";sg.style.fontWeight="400";});
+    updateBottleneck(); updateSensitivity();
     validate(); return;
   }
   k=runKernel(sv);
@@ -508,6 +580,7 @@ function recompute(){
   dv.textContent = sel.gut!==k.verdict
     ? `Divergence — your gut said ${TITLE[sel.gut]}, the kernel reads ${TITLE[k.verdict]}. Whichever you act on, the gap gets logged.`
     : `Alignment — gut and kernel both read ${TITLE[k.verdict]}.`;
+  updateBottleneck(); updateSensitivity();
   validate();
 }
 
@@ -572,10 +645,23 @@ function drawOrb(){
   ctx.beginPath(); ctx.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+Math.PI*2*C);
   ctx.strokeStyle="rgba(46,87,148,0.85)"; ctx.lineWidth=3; ctx.lineCap="round"; ctx.stroke();
 
+  // display mapping only — raw values in telemetry/logs are untouched.
+  const dispR=v=>Math.pow(Math.max(0,Math.min(1,v)),0.55)*R*0.92;
+
+  // commit-floor reference ring: how far the state point is from commit territory
+  const floorR=dispR(disp.floor);
+  ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.arc(cx,cy,floorR,0,Math.PI*2);
+  ctx.strokeStyle="rgba(200,132,28,0.30)"; ctx.lineWidth=1; ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.font="7px 'JetBrains Mono',monospace"; ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+  ctx.fillStyle="rgba(200,132,28,0.55)";
+  ctx.fillText("floor",cx,cy-floorR-4);
+
   const conf=Math.max(0,Math.min(1,disp.conf));
   const dir=(disp.Eeff>=0)?-1:1;
-  const mag=conf*R*0.92;
-  const wob=phi*R*0.16*Math.sin(T*1.7);
+  const mag=dispR(conf);
+  const wob=(1-C)*phi*R*0.16*Math.sin(T*1.7); // coherent = steady, decohered = wandering
   const px=cx+wob, py=cy+dir*mag;
 
   const halo=R*(0.10+H*0.44);
@@ -607,6 +693,9 @@ function updateReadouts(){
   if(co) co.setAttribute("stroke-dashoffset",(C*(1-coh)).toFixed(1));
   $("gConfVal").textContent=conf.toFixed(2).slice(1);
   $("gCohVal").textContent=coh.toFixed(2).slice(1);
+  // plain-language readout for the blue ring (display only)
+  $("cohPct").textContent=Math.round(coh*100)+"%";
+  $("cohWord").textContent=coh>=0.75?"clear":coh>=0.5?"mostly clear":coh>=0.25?"fuzzy":"very fuzzy";
   const sgn=v=>(v>0.005?"+":v<-0.005?"−":"±")+Math.abs(v).toFixed(2).slice(1);
   $("tEeff").textContent=sgn(disp.Eeff);
   $("tR").textContent=disp.rMixed.toFixed(3);
@@ -631,6 +720,8 @@ function wire(){
     if(sc){ score(sc.dataset.id,sc.dataset.outcome); return; }
     if(e.target.closest("#clearDemoBtn")){ clearDemo(); return; }
     if(e.target.closest("#introClose")){ dismissIntro(); return; }
+    const bl=e.target.closest("#bottleneck");
+    if(bl){ pulseControl(bl.dataset.target); return; }
     if(e.target.closest("#logBtn")){ logEntry(); return; }
   });
   root.addEventListener("input",e=>{
