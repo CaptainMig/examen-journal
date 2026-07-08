@@ -37,6 +37,25 @@
     #shell{align-items:center;background:radial-gradient(130% 130% at 50% -10%,#eceae4 0%,#e0ded6 55%,#d5d3ca 100%);padding:26px 20px}
     #examen-app{height:min(874px,94dvh);border-radius:34px;box-shadow:0 40px 90px -40px rgba(11,18,32,.55),0 0 0 1px rgba(11,18,32,.08);overflow:hidden;padding-top:14px}
   }
+
+  /* sticky "discern" instrument — pins below the app bar while the slider clusters
+     scroll underneath, and compresses so it doesn't eat the phone viewport */
+  /* disable scroll anchoring: when the pinned instrument compacts (above the viewport),
+     the browser would adjust scrollTop to keep content stable, which fights the pin and
+     causes a stick/unstick oscillation. */
+  #scroll{overflow-anchor:none}
+  #instrument{position:sticky;top:0;z-index:30;transition:box-shadow .3s ease,padding .3s ease}
+  #instrument.stuck{padding-top:12px!important;padding-bottom:14px!important;box-shadow:0 22px 42px -14px rgba(0,0,0,.72),0 8px 20px -8px rgba(0,0,0,.55)!important}
+  /* orb compaction via transform on a wrapper — the draw loop rewrites the canvas
+     width/height attributes every frame, so transitioning the canvas height directly
+     gets restarted perpetually. Scaling a wrapper sidesteps that. */
+  #orbWrap{display:flex;align-items:center;justify-content:center;height:270px;overflow:hidden;margin:2px auto 4px;transition:height .3s ease}
+  #orb{transition:transform .3s ease;transform-origin:center center}
+  #instrument.stuck #orbWrap{height:152px}
+  #instrument.stuck #orb{transform:scale(.56)}
+  #instrument .compactHide{transition:max-height .35s ease,opacity .25s ease,margin .35s ease,padding .35s ease;max-height:280px;overflow:hidden}
+  #instrument.stuck .compactHide{max-height:0!important;opacity:0;margin-top:0!important;padding-top:0!important;pointer-events:none}
+  #instrument.stuck #vReason{min-height:0!important}
 </style>
 </head>
 <body>
@@ -65,11 +84,11 @@
       <div style="margin:18px -20px 4px;padding:0 20px;overflow-x:auto">
         <div style="display:flex;gap:8px;width:max-content">
           <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#a89f8c;align-self:center;padding-right:2px">Try</span>
-          <button class="presetChip" data-preset="0" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Take the offer</button>
-          <button class="presetChip" data-preset="1" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">End a friendship</button>
-          <button class="presetChip" data-preset="2" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Move away</button>
-          <button class="presetChip" data-preset="3" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Post the callout</button>
-          <button class="presetChip" data-preset="4" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Push through</button>
+          <button class="presetChip" data-preset="0" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Take the job offer</button>
+          <button class="presetChip" data-preset="1" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Have the hard talk</button>
+          <button class="presetChip" data-preset="2" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Say no to the commitment</button>
+          <button class="presetChip" data-preset="3" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Ask for the raise</button>
+          <button class="presetChip" data-preset="4" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Rest the injury</button>
         </div>
       </div>
 
@@ -117,6 +136,8 @@
           <span style="font-family:'Newsreader',serif;font-size:19px;font-weight:600">Discern</span>
         </div>
 
+        <!-- sticky sentinel: when it scrolls above the pin line, the instrument is "stuck" -->
+        <div id="instStick" aria-hidden="true" style="height:1px;margin:0;padding:0"></div>
         <!-- INSTRUMENT -->
         <div id="instrument" style="background:#0B1220;border-radius:24px;padding:20px 18px 18px;color:#F1EFE8;box-shadow:0 24px 55px -26px rgba(11,18,32,.65);overflow:hidden">
           <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
@@ -124,11 +145,11 @@
             <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;color:rgba(241,239,232,.4)">NERVA · v11.1 · live</span>
           </div>
 
-          <canvas id="orb" style="width:100%;max-width:270px;height:270px;display:block;margin:2px auto 4px"></canvas>
+          <div id="orbWrap"><canvas id="orb" style="width:100%;max-width:270px;height:270px;display:block;margin:0 auto"></canvas></div>
 
           <div style="text-align:center;margin-top:-6px">
             <div id="vWord" style="font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:.01em;line-height:1;color:#F1EFE8">—</div>
-            <div id="vReason" style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:rgba(241,239,232,.62);margin:9px auto 0;max-width:300px;min-height:40px">Choose your gut read above to arm the instrument.</div>
+            <div id="vReason" class="compactHide" style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:rgba(241,239,232,.62);margin:9px auto 0;max-width:300px;min-height:40px">Choose your gut read above to arm the instrument.</div>
           </div>
 
           <!-- verdict spectrum -->
@@ -143,7 +164,7 @@
           </div>
 
           <!-- gauges + telemetry -->
-          <div style="display:flex;align-items:center;gap:14px;margin-top:16px;border-top:1px solid rgba(241,239,232,.12);padding-top:16px">
+          <div class="compactHide" style="display:flex;align-items:center;gap:14px;margin-top:16px;border-top:1px solid rgba(241,239,232,.12);padding-top:16px">
             <div style="display:flex;gap:12px;flex-shrink:0">
               <div style="position:relative;width:58px;height:58px">
                 <svg width="58" height="58" viewBox="0 0 58 58" style="transform:rotate(-90deg)"><circle cx="29" cy="29" r="24" fill="none" stroke="rgba(241,239,232,.13)" stroke-width="4"/><circle id="gConfArc" cx="29" cy="29" r="24" fill="none" stroke="#C8841C" stroke-width="4" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="150.8"/></svg>
@@ -169,14 +190,14 @@
           </div>
 
           <!-- rules -->
-          <div id="krules" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:15px">
+          <div id="krules" class="compactHide" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:15px">
             <span class="krule" data-r="brake" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">One-way brake</span>
             <span class="krule" data-r="desolation" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">Desolation</span>
             <span class="krule" data-r="blast" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">Blast consult</span>
             <span class="krule" data-r="urgency" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">Urgency</span>
           </div>
 
-          <div id="vDiverge" style="margin-top:14px;font-family:'Newsreader',serif;font-style:italic;font-size:12.5px;line-height:1.55;color:rgba(241,239,232,.62);border-left:2px solid #C8841C;padding-left:11px;display:none"></div>
+          <div id="vDiverge" class="compactHide" style="margin-top:14px;font-family:'Newsreader',serif;font-style:italic;font-size:12.5px;line-height:1.55;color:rgba(241,239,232,.62);border-left:2px solid #C8841C;padding-left:11px;display:none"></div>
         </div>
 
         <!-- controls: three clusters -->
@@ -370,12 +391,19 @@ const VCOLOR={COMMIT:"#C8841C",HOLD:"#9B7B3A",WAIT:"#5F6B7A",CONSULT:"#2E5794",T
 const TITLE={COMMIT:"Commit",HOLD:"Hold",WAIT:"Wait",CONSULT:"Consult",TOXIC:"Toxic"};
 const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// Each preset demonstrates a distinct v11.1 behavior. Values verified to land the
+// indicated verdict/rule — tune values here (never kernel constants) if the math shifts.
 const PRESETS=[
-  {decision:"Take the job offer from the smaller firm.",domain:"money",gut:"COMMIT",E:0.62,P:0.8,H:0.3,PHI:0.1,S:0.7,B:0.3,T:0.5,oneWay:false},
-  {decision:"End a long friendship that keeps hurting me.",domain:"people",gut:"TOXIC",E:-0.68,P:0.6,H:0.35,PHI:0.6,S:0.6,B:0.5,T:0.2,oneWay:true},
-  {decision:"Move across the country for a fresh start.",domain:"time",gut:"WAIT",E:0.22,P:0.4,H:0.6,PHI:0.35,S:0.8,B:0.6,T:0.35,oneWay:true},
-  {decision:"Post the public callout about my old employer.",domain:"voice",gut:"CONSULT",E:0.32,P:0.35,H:0.5,PHI:0.5,S:0.65,B:0.82,T:0.8,oneWay:false},
-  {decision:"Push through the injury and race anyway.",domain:"body",gut:"HOLD",E:-0.32,P:0.72,H:0.3,PHI:0.3,S:0.55,B:0.2,T:0.65,oneWay:false}
+  // → HOLD: favorable but not overwhelming
+  {decision:"Take the job offer from the smaller firm.",domain:"money",gut:"COMMIT",E:0.62,P:0.80,H:0.30,PHI:0.10,S:0.70,B:0.30,T:0.50,oneWay:false},
+  // → CONSULT via One-Way Brake: irreversible words, modest confidence
+  {decision:"Have the hard talk I've been avoiding.",domain:"people",gut:"WAIT",E:0.35,P:0.60,H:0.35,PHI:0.30,S:0.60,B:0.50,T:0.30,oneWay:true},
+  // → COMMIT: clear evidence, verified firsthand, low noise (gut/kernel divergence)
+  {decision:"Say no to the commitment I don't have room for.",domain:"time",gut:"HOLD",E:0.80,P:0.90,H:0.15,PHI:0.05,S:0.40,B:0.20,T:0.20,oneWay:false},
+  // → CONSULT via Urgency Escalation: window closing on a WAIT-grade signal
+  {decision:"Ask for the raise before review season.",domain:"voice",gut:"WAIT",E:0.30,P:0.50,H:0.50,PHI:0.30,S:0.50,B:0.30,T:0.80,oneWay:false},
+  // → WAIT via Desolation rule: favorable-looking evidence, but Φ≥.75 demotes it
+  {decision:"Rest the injury instead of racing.",domain:"body",gut:"COMMIT",E:0.90,P:0.90,H:0.05,PHI:0.75,S:0.30,B:0.20,T:0.30,oneWay:false}
 ];
 
 /* ═══════════ state ═══════════ */
@@ -387,6 +415,7 @@ const target={Eeff:0,C:0.48,rMixed:0,conf:0,svn:0,phi:0.2,H:0.4,floor:0.55,marke
 
 const root=document.getElementById("examen-app");
 const $=id=>root.querySelector("#"+id);
+const instrument=$("instrument");
 
 /* ═══════════ kernel — v11.1 (recalibrated; see K block) ═══════════ */
 function vonNeumann(r){const lp=(1+r)/2,lm=(1-r)/2,t=x=>x<=0?0:-x*Math.log2(x);return t(lp)+t(lm);}
@@ -535,6 +564,11 @@ function drawOrb(){
 }
 
 function updateReadouts(){
+  // spectrum marker stays visible in compact mode — always update it
+  const dot=$("specDot"); if(dot){ dot.style.left=disp.markerX+"%"; if(k) dot.style.borderTopColor=VCOLOR[k.verdict]; }
+  // gauges + telemetry are collapsed & hidden when stuck; skip their per-frame DOM writes
+  // (also lets their max-height collapse transition run without being restarted each frame)
+  if(instrument&&instrument.classList.contains("stuck")) return;
   const C=150.8;
   const conf=Math.max(0,Math.min(1,disp.conf)), coh=Math.max(0,Math.min(1,disp.C));
   const ca=$("gConfArc"), co=$("gCohArc");
@@ -547,7 +581,6 @@ function updateReadouts(){
   $("tR").textContent=disp.rMixed.toFixed(3);
   $("tSvn").textContent=disp.svn.toFixed(3);
   $("tFloor").textContent=disp.floor.toFixed(2);
-  const dot=$("specDot"); if(dot){ dot.style.left=disp.markerX+"%"; if(k) dot.style.borderTopColor=VCOLOR[k.verdict]; }
 }
 
 /* ═══════════ wiring ═══════════ */
@@ -650,16 +683,16 @@ function loadOrSeed(){
 }
 function demoSeed(){
   const day=864e5, now=Date.now();
-  const mk=o=>Object.assign({id:Math.random().toString(36).slice(2),kernelVersion:"v11",demo:true},o);
+  const mk=o=>Object.assign({id:Math.random().toString(36).slice(2),kernelVersion:"v11.1",demo:true},o);
   return [
-    mk({ts:new Date(now-3*day).toISOString(),domain:"money",decision:"Take the job offer from the smaller firm.",gut:"COMMIT",verdict:"COMMIT",confidence:0.61,coherence:0.68,action:"follow",falsification:"I feel energized after 30 days, not drained.",checkin:new Date(now+11*day).toISOString().slice(0,10),outcome:null,scored:false}),
-    mk({ts:new Date(now-9*day).toISOString(),domain:"people",decision:"End the friendship that keeps hurting me.",gut:"WAIT",verdict:"TOXIC",confidence:0.44,coherence:0.5,action:"follow",falsification:"Less anxiety in two weeks.",checkin:new Date(now-2*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
-    mk({ts:new Date(now-12*day).toISOString(),domain:"voice",decision:"Post the callout about my old employer.",gut:"COMMIT",verdict:"CONSULT",confidence:0.38,coherence:0.42,action:"override",falsification:"No legal or reputational blowback in 30 days.",checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:"didnt",scored:true}),
-    mk({ts:new Date(now-18*day).toISOString(),domain:"body",decision:"Push through the injury and race anyway.",gut:"HOLD",verdict:"WAIT",confidence:0.3,coherence:0.4,action:"follow",falsification:"Pain-free within a week.",checkin:new Date(now-4*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
-    mk({ts:new Date(now-22*day).toISOString(),domain:"time",decision:"Move across the country for a fresh start.",gut:"COMMIT",verdict:"CONSULT",confidence:0.36,coherence:0.4,action:"override",falsification:"No regret at 60 days.",checkin:new Date(now-6*day).toISOString().slice(0,10),outcome:"mixed",scored:true}),
-    mk({ts:new Date(now-26*day).toISOString(),domain:"money",decision:"Sell the index position to cover the renovation.",gut:"WAIT",verdict:"HOLD",confidence:0.47,coherence:0.55,action:"follow",falsification:"Portfolio intact and reno funded another way.",checkin:new Date(now-8*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
+    mk({ts:new Date(now-3*day).toISOString(),domain:"money",decision:"Take the job offer from the smaller firm.",gut:"COMMIT",verdict:"HOLD",confidence:0.45,coherence:0.66,action:"follow",falsification:"I feel energized after 30 days, not drained.",checkin:new Date(now+11*day).toISOString().slice(0,10),outcome:null,scored:false}),
+    mk({ts:new Date(now-9*day).toISOString(),domain:"people",decision:"Have the hard talk I'd been avoiding.",gut:"WAIT",verdict:"CONSULT",confidence:0.21,coherence:0.53,action:"follow",falsification:"Air cleared, not worse, within two weeks.",checkin:new Date(now-2*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
+    mk({ts:new Date(now-12*day).toISOString(),domain:"body",decision:"Rest the knee instead of racing.",gut:"COMMIT",verdict:"WAIT",confidence:0.54,coherence:0.48,action:"override",falsification:"Back to training pain-free in three weeks.",checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:"didnt",scored:true}),
+    mk({ts:new Date(now-18*day).toISOString(),domain:"time",decision:"Say no to joining the committee.",gut:"HOLD",verdict:"COMMIT",confidence:0.69,coherence:0.82,action:"follow",falsification:"No regret about the freed-up evenings at 30 days.",checkin:new Date(now-4*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
+    mk({ts:new Date(now-22*day).toISOString(),domain:"voice",decision:"Ask for the raise before review season.",gut:"WAIT",verdict:"CONSULT",confidence:0.13,coherence:0.41,action:"override",falsification:"A clear yes/no on the number within the month.",checkin:new Date(now-6*day).toISOString().slice(0,10),outcome:"mixed",scored:true}),
+    mk({ts:new Date(now-26*day).toISOString(),domain:"money",decision:"Sell the index position to fund the move.",gut:"WAIT",verdict:"HOLD",confidence:0.47,coherence:0.55,action:"follow",falsification:"Portfolio intact and the move funded another way.",checkin:new Date(now-8*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
     mk({ts:new Date(now-31*day).toISOString(),domain:"people",decision:"Say yes to being the maid of honor.",gut:"COMMIT",verdict:"COMMIT",confidence:0.66,coherence:0.72,action:"follow",falsification:"No resentment about the time cost by the wedding.",checkin:new Date(now-14*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
-    mk({ts:new Date(now-4*day).toISOString(),domain:"voice",decision:"Ask for the raise before the review cycle.",gut:"HOLD",verdict:"WAIT",confidence:0.33,coherence:0.45,action:"follow",falsification:"A clear yes/no within the month.",checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:null,scored:false})
+    mk({ts:new Date(now-4*day).toISOString(),domain:"body",decision:"Rest the injury instead of racing.",gut:"COMMIT",verdict:"WAIT",confidence:0.54,coherence:0.48,action:"follow",falsification:"Pain-free and cleared to train within a week.",checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:null,scored:false})
   ];
 }
 function clearDemo(){
@@ -681,7 +714,7 @@ function logEntry(){
     outcome:null, scored:false, kernelVersion:K.version
   };
   entries.push(entry); saveAll(entries);
-  const n=$("logNote"); n.textContent="Logged. AMDG."; n.style.color="#C8841C";
+  const n=$("logNote"); n.textContent="Logged."; n.style.color="#C8841C";
   const b=$("logBtn"); b.disabled=true; b.style.opacity="0.35";
   renderReview(); renderInsights();
   setTimeout(()=>{n.textContent="stored privately in your journal";n.style.color="#8a8880";},3500);
@@ -787,7 +820,32 @@ function switchTab(tab){
     b.querySelector("span").style.color=on?"#0B1220":"#9a978e";
   });
   const sc=$("scroll"); if(sc) sc.scrollTop=0;
+  const inst=$("instrument"); if(inst) inst.classList.remove("stuck"); // release when tab resets to top
   const cur=$("tab-"+tab); if(cur&&!REDUCED){cur.style.animation="none"; void cur.offsetWidth; cur.style.animation="exUp .35s ease";}
+}
+
+/* ═══════════ sticky instrument ═══════════ */
+function initSticky(){
+  const sc=$("scroll"), inst=instrument, sen=$("instStick");
+  if(!sc||!inst||!sen) return;
+  // Scroll-driven with a hysteresis band. An IntersectionObserver on a sentinel this
+  // close to the element flickers: compacting reflows layout, nudging the sentinel back
+  // across the threshold, which un-sticks → un-compacts → re-crosses, forever. Separate
+  // engage (−8px past the pin) and release (+8px) thresholds make a sub-pixel reflow
+  // unable to flip the state.
+  let stuck=false, pin=0;
+  const evaluate=()=>{
+    if(sen.offsetParent===null){ if(stuck){stuck=false;inst.classList.remove("stuck");} return; } // Today tab hidden
+    const y=sc.scrollTop;
+    if(!stuck){
+      // layout is stable while unstuck — read the sentinel's content-space position live
+      pin = sen.getBoundingClientRect().top - sc.getBoundingClientRect().top + y;
+      if(y > pin+8){ stuck=true; inst.classList.add("stuck"); } // freeze `pin`; compaction won't move scrollTop
+    } else if(y < pin-8){ stuck=false; inst.classList.remove("stuck"); }
+  };
+  sc.addEventListener("scroll",evaluate,{passive:true});
+  window.addEventListener("resize",evaluate,{passive:true});
+  evaluate();
 }
 
 /* ═══════════ boot ═══════════ */
@@ -804,6 +862,7 @@ function boot(){
   renderReview();
   renderInsights();
   recompute();
+  initSticky();
   raf=requestAnimationFrame(tick);
 }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
