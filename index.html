@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F1EFE8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Examen — Daily Decision Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#d5d3ca;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#1E3A6B;text-decoration:none}
+  a:hover{color:#C8841C}
+  #examen-app ::-webkit-scrollbar{width:0;height:0}
+  #examen-app{scrollbar-width:none}
+  #examen-app input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;cursor:pointer;outline:none;background:rgba(11,18,32,.14)}
+  #examen-app input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#FBFAF6;border:2.5px solid #C8841C;box-shadow:0 1px 3px rgba(11,18,32,.25);cursor:grab;margin-top:-9.5px}
+  #examen-app input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#FBFAF6;border:2.5px solid #C8841C;box-shadow:0 1px 3px rgba(11,18,32,.25);cursor:grab}
+  #examen-app input[type=range]:focus-visible{outline:2px solid #1E3A6B;outline-offset:6px}
+  #examen-app input[type=text],#examen-app textarea,#examen-app input[type=date]{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(11,18,32,.28);font-family:"Newsreader",Georgia,serif;font-size:19px;color:#0B1220;padding:6px 2px 8px;border-radius:0;resize:none}
+  #examen-app textarea{line-height:1.45}
+  #examen-app input::placeholder,#examen-app textarea::placeholder{color:rgba(95,94,90,.5);font-style:italic}
+  #examen-app input:focus-visible,#examen-app textarea:focus-visible{outline:none;border-bottom:2px solid #C8841C;padding-bottom:7px}
+  #examen-app input[type=date]{font-family:"JetBrains Mono",monospace;font-size:15px;max-width:210px}
+  @keyframes exUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* app shell: full-viewport on phones, framed column on desktop */
+  #shell{height:100dvh;display:flex;align-items:stretch;justify-content:center}
+  #examen-app{height:100%;width:100%;max-width:460px;display:flex;flex-direction:column;background:#F1EFE8;color:#0B1220;font-size:16px;padding-top:env(safe-area-inset-top)}
+  @media (min-width:520px){
+    #shell{align-items:center;background:radial-gradient(130% 130% at 50% -10%,#eceae4 0%,#e0ded6 55%,#d5d3ca 100%);padding:26px 20px}
+    #examen-app{height:min(874px,94dvh);border-radius:34px;box-shadow:0 40px 90px -40px rgba(11,18,32,.55),0 0 0 1px rgba(11,18,32,.08);overflow:hidden;padding-top:14px}
+  }
+</style>
+</head>
+<body>
+<div id="shell">
+<div id="examen-app">
+
+  <!-- top bar -->
+  <div style="display:flex;align-items:baseline;justify-content:space-between;padding:8px 22px 12px;border-bottom:1px solid rgba(11,18,32,.09)">
+    <div style="font-family:'Newsreader',serif;font-weight:600;font-size:23px;letter-spacing:-.01em">Examen<span style="color:#C8841C">.</span></div>
+    <div id="topDate" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;color:#8a8880">—</div>
+  </div>
+
+  <!-- scroll area -->
+  <div id="scroll" style="flex:1;overflow-y:auto;overflow-x:hidden">
+
+    <!-- ══════════ TODAY ══════════ -->
+    <section id="tab-today" style="padding:20px 20px 40px">
+
+      <div style="margin-bottom:6px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#a89f8c">Today's examen</div>
+        <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;line-height:1.12;margin:6px 0 2px">A decision, weighed.</h1>
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#5F5E5A">Gut first, the kernel second, the outcome last.</div>
+      </div>
+
+      <!-- presets -->
+      <div style="margin:18px -20px 4px;padding:0 20px;overflow-x:auto">
+        <div style="display:flex;gap:8px;width:max-content">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#a89f8c;align-self:center;padding-right:2px">Try</span>
+          <button class="presetChip" data-preset="0" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Take the offer</button>
+          <button class="presetChip" data-preset="1" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">End a friendship</button>
+          <button class="presetChip" data-preset="2" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Move away</button>
+          <button class="presetChip" data-preset="3" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Post the callout</button>
+          <button class="presetChip" data-preset="4" style="white-space:nowrap;font:500 13px Inter;padding:8px 13px;border:1px dashed rgba(11,18,32,.24);border-radius:999px;background:transparent;color:#5F5E5A;cursor:pointer">Push through</button>
+        </div>
+      </div>
+
+      <!-- ACT I -->
+      <div style="margin-top:26px">
+        <div style="display:flex;align-items:baseline;gap:11px;border-bottom:1px solid rgba(11,18,32,.12);padding-bottom:7px;margin-bottom:18px">
+          <span style="font-family:'Newsreader',serif;font-size:18px;color:#C8841C;font-weight:600">I</span>
+          <span style="font-family:'Newsreader',serif;font-size:19px;font-weight:600">Recollect</span>
+        </div>
+
+        <div style="margin-bottom:22px">
+          <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:10px">Which part of life?</div>
+          <div id="domainChips" style="display:flex;flex-wrap:wrap;gap:8px">
+            <button class="chip" data-v="money" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Money</button>
+            <button class="chip" data-v="people" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">People</button>
+            <button class="chip" data-v="time" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Time</button>
+            <button class="chip" data-v="voice" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Voice</button>
+            <button class="chip" data-v="body" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Body</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:24px">
+          <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:6px">What are you deciding?</div>
+          <textarea id="d_decision" rows="2" placeholder="Say it in one sentence…"></textarea>
+        </div>
+
+        <div style="margin-bottom:4px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+            <span style="font:500 12.5px Inter;color:#8a8880">Your gut, before the kernel speaks</span>
+          </div>
+          <div id="gutChips" style="display:flex;flex-wrap:wrap;gap:8px">
+            <button class="gchip" data-v="COMMIT" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Commit</button>
+            <button class="gchip" data-v="HOLD" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Hold</button>
+            <button class="gchip" data-v="WAIT" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Wait</button>
+            <button class="gchip" data-v="CONSULT" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Consult</button>
+            <button class="gchip" data-v="TOXIC" style="font:500 14px Inter;padding:9px 15px;border:1px solid rgba(11,18,32,.14);border-radius:999px;background:transparent;color:#0B1220;cursor:pointer;transition:all .15s">Toxic</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACT II -->
+      <div style="margin-top:30px">
+        <div style="display:flex;align-items:baseline;gap:11px;border-bottom:1px solid rgba(11,18,32,.12);padding-bottom:7px;margin-bottom:18px">
+          <span style="font-family:'Newsreader',serif;font-size:18px;color:#C8841C;font-weight:600">II</span>
+          <span style="font-family:'Newsreader',serif;font-size:19px;font-weight:600">Discern</span>
+        </div>
+
+        <!-- INSTRUMENT -->
+        <div id="instrument" style="background:#0B1220;border-radius:24px;padding:20px 18px 18px;color:#F1EFE8;box-shadow:0 24px 55px -26px rgba(11,18,32,.65);overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+            <span style="font-family:'Newsreader',serif;font-style:italic;font-size:14px;color:rgba(241,239,232,.72)">The reading</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;color:rgba(241,239,232,.4)">NERVA · v11.1 · live</span>
+          </div>
+
+          <canvas id="orb" style="width:100%;max-width:270px;height:270px;display:block;margin:2px auto 4px"></canvas>
+
+          <div style="text-align:center;margin-top:-6px">
+            <div id="vWord" style="font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:.01em;line-height:1;color:#F1EFE8">—</div>
+            <div id="vReason" style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:rgba(241,239,232,.62);margin:9px auto 0;max-width:300px;min-height:40px">Choose your gut read above to arm the instrument.</div>
+          </div>
+
+          <!-- verdict spectrum -->
+          <div style="margin:16px 2px 4px">
+            <div style="position:relative;height:8px;margin:0 0 2px">
+              <div id="specDot" style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #C8841C;transition:left .45s cubic-bezier(.5,0,.2,1)"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-radius:4px;overflow:hidden;height:6px;background:linear-gradient(90deg,#C8841C 0%,#9B7B3A 25%,#5F6B7A 50%,#2E5794 75%,#8A2C1D 100%)"></div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.4);margin-top:6px;text-align:center">
+              <span data-seg="COMMIT">COMMIT</span><span data-seg="HOLD">HOLD</span><span data-seg="WAIT">WAIT</span><span data-seg="CONSULT">CONSULT</span><span data-seg="TOXIC">TOXIC</span>
+            </div>
+          </div>
+
+          <!-- gauges + telemetry -->
+          <div style="display:flex;align-items:center;gap:14px;margin-top:16px;border-top:1px solid rgba(241,239,232,.12);padding-top:16px">
+            <div style="display:flex;gap:12px;flex-shrink:0">
+              <div style="position:relative;width:58px;height:58px">
+                <svg width="58" height="58" viewBox="0 0 58 58" style="transform:rotate(-90deg)"><circle cx="29" cy="29" r="24" fill="none" stroke="rgba(241,239,232,.13)" stroke-width="4"/><circle id="gConfArc" cx="29" cy="29" r="24" fill="none" stroke="#C8841C" stroke-width="4" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="150.8"/></svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <span id="gConfVal" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#F1EFE8">.00</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:.1em;color:rgba(241,239,232,.5)">CONF</span>
+                </div>
+              </div>
+              <div style="position:relative;width:58px;height:58px">
+                <svg width="58" height="58" viewBox="0 0 58 58" style="transform:rotate(-90deg)"><circle cx="29" cy="29" r="24" fill="none" stroke="rgba(241,239,232,.13)" stroke-width="4"/><circle id="gCohArc" cx="29" cy="29" r="24" fill="none" stroke="#2E5794" stroke-width="4" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="150.8"/></svg>
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                  <span id="gCohVal" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#F1EFE8">.00</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:6.5px;letter-spacing:.1em;color:rgba(241,239,232,.5)">COHER</span>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;font-family:'JetBrains Mono',monospace">
+              <div style="font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.42)">E eff<b id="tEeff" style="display:block;font-size:13px;font-weight:500;color:#F1EFE8;margin-top:1px">±.00</b></div>
+              <div style="font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.42)">r mixed<b id="tR" style="display:block;font-size:13px;font-weight:500;color:#F1EFE8;margin-top:1px">.000</b></div>
+              <div style="font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.42)">S vN<b id="tSvn" style="display:block;font-size:13px;font-weight:500;color:#F1EFE8;margin-top:1px">.000</b></div>
+              <div style="font-size:8px;letter-spacing:.08em;color:rgba(241,239,232,.42)">floor<b id="tFloor" style="display:block;font-size:13px;font-weight:500;color:#F1EFE8;margin-top:1px">.55</b></div>
+            </div>
+          </div>
+
+          <!-- rules -->
+          <div id="krules" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:15px">
+            <span class="krule" data-r="brake" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">One-way brake</span>
+            <span class="krule" data-r="desolation" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">Desolation</span>
+            <span class="krule" data-r="blast" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">Blast consult</span>
+            <span class="krule" data-r="urgency" style="font-family:'JetBrains Mono',monospace;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;padding:5px 8px;border:1px solid rgba(241,239,232,.14);color:rgba(241,239,232,.3);border-radius:999px;transition:all .3s">Urgency</span>
+          </div>
+
+          <div id="vDiverge" style="margin-top:14px;font-family:'Newsreader',serif;font-style:italic;font-size:12.5px;line-height:1.55;color:rgba(241,239,232,.62);border-left:2px solid #C8841C;padding-left:11px;display:none"></div>
+        </div>
+
+        <!-- controls: three clusters -->
+        <div style="margin-top:20px">
+          <div style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#a89f8c;margin:0 0 10px 2px">Signal — what the evidence says</div>
+          <div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:16px;padding:16px 16px 6px">
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Evidence direction</span><span id="v_E" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">±.00</span></div>
+              <input type="range" data-k="E" min="-1" max="1" step="0.05" value="0" aria-label="Evidence direction">
+              <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>strongly against</span><span>strongly for</span></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Provenance</span><span id="v_P" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">.50</span></div>
+              <input type="range" data-k="P" min="0" max="1" step="0.05" value="0.5" aria-label="Provenance">
+              <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>hearsay</span><span>verified firsthand</span></div>
+            </div>
+          </div>
+
+          <div style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#a89f8c;margin:18px 0 10px 2px">Field — the conditions you're in</div>
+          <div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:16px;padding:16px 16px 6px">
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Uncertainty</span><span id="v_H" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">.40</span></div>
+              <input type="range" data-k="H" min="0" max="1" step="0.05" value="0.4" aria-label="Uncertainty">
+              <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>legible</span><span>pure noise</span></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Interference</span><span id="v_PHI" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">.20</span></div>
+              <input type="range" data-k="PHI" min="0" max="1" step="0.05" value="0.2" aria-label="Interference">
+              <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>clear-headed</span><span>desolation</span></div>
+            </div>
+          </div>
+
+          <div style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#a89f8c;margin:18px 0 10px 2px">Consequence — what acting costs</div>
+          <div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:16px;padding:16px 16px 6px">
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Stakes</span><span id="v_S" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">.50</span></div>
+              <input type="range" data-k="S" min="0" max="1" step="0.05" value="0.5" aria-label="Stakes">
+              <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>low</span><span>critical</span></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Blast radius</span><span id="v_B" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">.20</span></div>
+              <input type="range" data-k="B" min="0" max="1" step="0.05" value="0.2" aria-label="Blast radius">
+              <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>only me</span><span>many others</span></div>
+            </div>
+            <div style="margin-bottom:16px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Time pressure</span><span id="v_T" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">.30</span></div>
+              <input type="range" data-k="T" min="0" max="1" step="0.05" value="0.3" aria-label="Time pressure">
+              <div style="display:flex;justify-content:space-between;font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;color:#8a8880;margin-top:7px"><span>no deadline</span><span>window closing</span></div>
+            </div>
+            <label id="doorWrap" style="display:flex;align-items:center;gap:13px;border:1px solid rgba(11,18,32,.12);border-radius:12px;padding:13px 14px;cursor:pointer;user-select:none;transition:all .15s;margin-bottom:10px">
+              <input type="checkbox" id="oneWay" style="position:absolute;opacity:0;pointer-events:none">
+              <span id="doorSwitch" style="width:40px;height:23px;border-radius:12px;background:#E7E4D9;border:1px solid rgba(11,18,32,.12);position:relative;flex-shrink:0;transition:background .15s"><span id="doorKnob" style="position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#5F5E5A;transition:all .15s"></span></span>
+              <span><b style="font:600 14px Inter;display:block">One-Way Door</b><span style="font-family:'Newsreader',serif;font-style:italic;font-size:12.5px;color:#5F5E5A">cannot be undone once taken</span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACT III -->
+      <div style="margin-top:30px">
+        <div style="display:flex;align-items:baseline;gap:11px;border-bottom:1px solid rgba(11,18,32,.12);padding-bottom:7px;margin-bottom:18px">
+          <span style="font-family:'Newsreader',serif;font-size:18px;color:#C8841C;font-weight:600">III</span>
+          <span style="font-family:'Newsreader',serif;font-size:19px;font-weight:600">Resolve</span>
+        </div>
+
+        <div style="margin-bottom:22px">
+          <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:10px">Your move — both are valid; the gap is the data.</div>
+          <div id="actionRow" style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+            <button class="actbtn" data-v="follow" style="font:600 14px Inter;padding:13px 8px;border:1px solid rgba(11,18,32,.18);border-radius:12px;background:transparent;color:#0B1220;cursor:pointer;text-align:center;transition:all .15s">Follow NERVA<small style="display:block;font-weight:400;font-size:11.5px;color:#8a8880;font-family:'Newsreader',serif;font-style:italic;margin-top:2px">act on the call</small></button>
+            <button class="actbtn" data-v="override" style="font:600 14px Inter;padding:13px 8px;border:1px solid rgba(11,18,32,.18);border-radius:12px;background:transparent;color:#0B1220;cursor:pointer;text-align:center;transition:all .15s">Override<small style="display:block;font-weight:400;font-size:11.5px;color:#8a8880;font-family:'Newsreader',serif;font-style:italic;margin-top:2px">act on your own read</small></button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:22px">
+          <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:6px">How will you know this worked? <span style="color:#C8841C">— be falsifiable</span></div>
+          <textarea id="d_falsify" rows="2" placeholder="A concrete, checkable outcome…"></textarea>
+        </div>
+
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:22px">
+          <div>
+            <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:6px">Check in on</div>
+            <input type="date" id="d_checkin">
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px">
+          <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:6px">Notes <span style="color:#a89f8c">· optional</span></div>
+          <textarea id="d_notes" rows="1" placeholder=""></textarea>
+        </div>
+
+        <button id="logBtn" disabled style="width:100%;margin-top:20px;padding:16px;font:600 16px Inter;background:#0B1220;color:#F1EFE8;border:none;border-radius:14px;cursor:pointer;letter-spacing:.01em;transition:opacity .2s;opacity:.35">Log this entry</button>
+        <div id="logNote" style="text-align:center;font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#8a8880;margin-top:11px">stored privately in your journal</div>
+      </div>
+    </section>
+
+    <!-- ══════════ REVIEW ══════════ -->
+    <section id="tab-review" hidden style="padding:20px 20px 40px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#a89f8c">Close the loop</div>
+      <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;line-height:1.12;margin:6px 0 2px">Review.</h1>
+      <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#5F5E5A;margin-bottom:22px">An unscored decision teaches nothing. Score what came due.</div>
+
+      <div style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#a89f8c;margin-bottom:12px">Due for review</div>
+      <div id="reviewList"></div>
+      <div id="reviewEmpty" style="display:none;background:#FBFAF6;border:1px dashed rgba(11,18,32,.16);border-radius:16px;padding:26px 18px;text-align:center">
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#5F5E5A">Nothing due yet.</div>
+        <div style="font-family:'Newsreader',serif;font-size:13px;color:#a89f8c;margin-top:4px">Come back when a check-in date arrives.</div>
+      </div>
+
+      <div style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#a89f8c;margin:30px 0 12px">Recent history</div>
+      <div id="histStrip"></div>
+    </section>
+
+    <!-- ══════════ INSIGHTS ══════════ -->
+    <section id="tab-insights" hidden style="padding:20px 20px 40px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#a89f8c">What the record shows</div>
+      <h1 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;line-height:1.12;margin:6px 0 2px">Insights.</h1>
+      <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:#5F5E5A;margin-bottom:22px">Fifty scored outcomes will tell you more than any single verdict.</div>
+
+      <!-- lift hero -->
+      <div style="background:#0B1220;border-radius:20px;padding:22px 20px;color:#F1EFE8;box-shadow:0 20px 45px -26px rgba(11,18,32,.6)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(241,239,232,.5)">Lift — following vs overriding</div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-top:8px">
+          <span id="liftDelta" style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#C8841C">—</span>
+          <span style="font-family:'Newsreader',serif;font-style:italic;font-size:14px;color:rgba(241,239,232,.6)">points when you followed</span>
+        </div>
+        <div style="display:flex;gap:22px;margin-top:16px;font-family:'JetBrains Mono',monospace">
+          <div><div style="font-size:9px;letter-spacing:.1em;color:rgba(241,239,232,.5)">FOLLOWED · WORKED</div><b id="liftFollow" style="display:block;font-size:20px;font-weight:500;margin-top:3px">—</b></div>
+          <div><div style="font-size:9px;letter-spacing:.1em;color:rgba(241,239,232,.5)">OVERRODE · WORKED</div><b id="liftOverride" style="display:block;font-size:20px;font-weight:500;margin-top:3px">—</b></div>
+        </div>
+        <div id="liftCaveat" style="display:none;margin-top:14px;font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:rgba(241,239,232,.5);border-left:2px solid rgba(241,239,232,.25);padding-left:10px">Includes demo entries — the lift score is illustrative until your own outcomes replace them.</div>
+      </div>
+
+      <!-- stat row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:16px">
+        <div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:14px;padding:14px 12px"><div id="statEntries" style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;line-height:1">—</div><div style="font:500 11px Inter;color:#8a8880;margin-top:3px">entries</div></div>
+        <div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:14px;padding:14px 12px"><div id="statAlign" style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;line-height:1">—</div><div style="font:500 11px Inter;color:#8a8880;margin-top:3px">gut aligned</div></div>
+        <div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:14px;padding:14px 12px"><div id="statScored" style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;line-height:1">—</div><div style="font:500 11px Inter;color:#8a8880;margin-top:3px">scored</div></div>
+      </div>
+
+      <div style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#a89f8c;margin:28px 0 12px">Where you decide</div>
+      <div id="domainPatterns" style="display:flex;flex-direction:column;gap:10px"></div>
+
+      <div id="demoRow" style="display:none;margin-top:26px;text-align:center">
+        <button id="clearDemoBtn" style="font:500 12.5px Inter;color:#8A2C1D;background:none;border:1px solid rgba(138,44,29,.3);border-radius:999px;padding:9px 16px;cursor:pointer">Clear demo entries</button>
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:12px;color:#a89f8c;margin-top:7px">Removes the seeded examples; your own entries stay.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- bottom tab bar -->
+  <div style="display:flex;padding:8px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid rgba(11,18,32,.09);background:#F1EFE8">
+    <button class="tabbtn" data-tab="today" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:#9a978e">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v7l4 2"/><circle cx="12" cy="12" r="9"/></svg>
+      <span style="font:600 10px Inter;letter-spacing:.02em">Today</span>
+    </button>
+    <button class="tabbtn" data-tab="review" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:#9a978e">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 6L9 17l-5-5"/></svg>
+      <span style="font:600 10px Inter;letter-spacing:.02em">Review</span>
+    </button>
+    <button class="tabbtn" data-tab="insights" style="flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:#9a978e">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span style="font:600 10px Inter;letter-spacing:.02em">Insights</span>
+    </button>
+  </div>
+
+</div>
+</div>
+
+<script>
+"use strict";
+(function(){
+
+/* ═══════════ constants ═══════════ */
+/* NERVA kernel — v11.1 (consumer recalibration of the published v11).
+   PROVISIONAL constants — tuned so a genuinely strong signal can reach COMMIT and the
+   Desolation rule can visibly fire. They are placeholders pending real scored outcomes;
+   the 50-outcome falsification loop is what settles them empirically, not intuition.
+   Delta from v11: commitBase 0.55→0.42, commitSlope 0.25→0.20, a perceptual softening
+   conf = rMixed^confSoften on the decision readout only, and Desolation now acts on
+   COMMIT *and* HOLD. rMixed and von Neumann entropy stay on the raw purity (audit-honest). */
+const K = {
+  gamma:0.6, commitBase:0.42, commitSlope:0.20, confSoften:0.72,
+  holdBase:0.30, holdSlope:0.15,
+  toxicEvidence:-0.30, brakeBase:0.60, brakeSlopeS:0.20, brakeSlopeB:0.10,
+  desolationGate:0.70, blastGate:0.70, urgencyGate:0.70, version:"v11.1"
+};
+const STORE="examen_v1";
+const ORDER=["COMMIT","HOLD","WAIT","CONSULT","TOXIC"];
+const VCOLOR={COMMIT:"#C8841C",HOLD:"#9B7B3A",WAIT:"#5F6B7A",CONSULT:"#2E5794",TOXIC:"#8A2C1D"};
+const TITLE={COMMIT:"Commit",HOLD:"Hold",WAIT:"Wait",CONSULT:"Consult",TOXIC:"Toxic"};
+const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const PRESETS=[
+  {decision:"Take the job offer from the smaller firm.",domain:"money",gut:"COMMIT",E:0.62,P:0.8,H:0.3,PHI:0.1,S:0.7,B:0.3,T:0.5,oneWay:false},
+  {decision:"End a long friendship that keeps hurting me.",domain:"people",gut:"TOXIC",E:-0.68,P:0.6,H:0.35,PHI:0.6,S:0.6,B:0.5,T:0.2,oneWay:true},
+  {decision:"Move across the country for a fresh start.",domain:"time",gut:"WAIT",E:0.22,P:0.4,H:0.6,PHI:0.35,S:0.8,B:0.6,T:0.35,oneWay:true},
+  {decision:"Post the public callout about my old employer.",domain:"voice",gut:"CONSULT",E:0.32,P:0.35,H:0.5,PHI:0.5,S:0.65,B:0.82,T:0.8,oneWay:false},
+  {decision:"Push through the injury and race anyway.",domain:"body",gut:"HOLD",E:-0.32,P:0.72,H:0.3,PHI:0.3,S:0.55,B:0.2,T:0.65,oneWay:false}
+];
+
+/* ═══════════ state ═══════════ */
+const sv={E:0,P:0.5,H:0.4,PHI:0.2,S:0.5,B:0.2,T:0.3,oneWay:false};
+const sel={domain:null,gut:null,action:null};
+let k=null, entries=[], raf=null;
+const disp={Eeff:0,C:0.48,rMixed:0,conf:0,svn:0,phi:0.2,H:0.4,floor:0.55,markerX:50};
+const target={Eeff:0,C:0.48,rMixed:0,conf:0,svn:0,phi:0.2,H:0.4,floor:0.55,markerX:50};
+
+const root=document.getElementById("examen-app");
+const $=id=>root.querySelector("#"+id);
+
+/* ═══════════ kernel — v11.1 (recalibrated; see K block) ═══════════ */
+function vonNeumann(r){const lp=(1+r)/2,lm=(1-r)/2,t=x=>x<=0?0:-x*Math.log2(x);return t(lp)+t(lm);}
+function runKernel(s){
+  const Eeff=s.E*s.P, rPure=Math.abs(Eeff);
+  const C=Math.max(0,(1-s.H)*(1-K.gamma*s.PHI));
+  const rMixed=Math.max(0,C*rPure), svn=vonNeumann(rMixed);
+  // conf: perceptual softening of the raw mixed-state magnitude, used for verdict thresholds
+  // and the confidence gauge only. rMixed (raw) and svn stay untouched for the audit trail.
+  const conf=Math.pow(rMixed,K.confSoften);
+  const commitFloor=K.commitBase+K.commitSlope*s.S;
+  const holdFloor=K.holdBase+K.holdSlope*s.S;
+  const brakeFloor=K.brakeBase+K.brakeSlopeS*s.S+K.brakeSlopeB*s.B;
+  let verdict,reason; const rules={brake:false,desolation:false,blast:false,urgency:false};
+  if(Eeff<=K.toxicEvidence&&conf>=holdFloor){verdict="TOXIC";reason="Provenance-weighted evidence weighs decisively against, with enough coherence to trust the reading. Do not proceed.";}
+  else if(Eeff<0){verdict="WAIT";reason="Evidence leans against but the signal is too decohered to condemn. Let it develop.";}
+  else if(conf>=commitFloor){verdict="COMMIT";reason="Evidence for, provenance solid, coherence high — confidence clears the stake-scaled floor.";}
+  else if(conf>=holdFloor){verdict="HOLD";reason="Direction is favorable but confidence sits below the commit floor for these stakes. Hold; gather signal.";}
+  else{verdict="WAIT";reason="Too decohered to act. Reduce uncertainty, verify provenance, or strengthen evidence first.";}
+  if(s.PHI>=K.desolationGate&&(verdict==="COMMIT"||verdict==="HOLD")){verdict="WAIT";rules.desolation=true;reason="Interference reads as desolation. The rule holds: never make a change in desolation. Revisit when the field clears.";}
+  if(s.oneWay&&verdict!=="TOXIC"&&conf<brakeFloor){verdict="CONSULT";rules.brake=true;reason="Irreversible, with too little confidence for the stakes. The One-Way Brake forces CONSULT — seek counsel before proceeding.";}
+  if(!rules.brake&&s.B>=K.blastGate&&verdict!=="TOXIC"&&verdict!=="COMMIT"&&conf<commitFloor){verdict="CONSULT";rules.blast=true;reason="The blast radius reaches well beyond you and confidence is below the commit floor. Those who bear the cost get a voice.";}
+  if(verdict==="WAIT"&&s.T>=K.urgencyGate){verdict="CONSULT";rules.urgency=true;reason="The kernel would WAIT, but the window is closing — deferral is itself a decision now. Escalating to CONSULT.";}
+  return {verdict,reason,rules,conf,rMixed,svn,Eeff,C,commitFloor};
+}
+
+/* ═══════════ recompute + verdict UI ═══════════ */
+function styleRule(el,on){
+  el.style.borderColor=on?"#C8841C":"rgba(241,239,232,.14)";
+  el.style.color=on?"#C8841C":"rgba(241,239,232,.3)";
+}
+function recompute(){
+  target.phi=sv.PHI; target.H=sv.H;
+  target.C=Math.max(0,(1-sv.H)*(1-K.gamma*sv.PHI));
+  target.floor=K.commitBase+K.commitSlope*sv.S;
+  if(!sel.gut){
+    k=null; target.Eeff=0; target.rMixed=0; target.conf=0; target.svn=0;
+    $("vWord").textContent="—"; $("vWord").style.color="#F1EFE8";
+    $("vReason").textContent="Choose your gut read above to arm the instrument.";
+    $("vDiverge").style.display="none";
+    root.querySelectorAll(".krule").forEach(r=>styleRule(r,false));
+    root.querySelectorAll("[data-seg]").forEach(sg=>{sg.style.color="rgba(241,239,232,.4)";sg.style.fontWeight="400";});
+    validate(); return;
+  }
+  k=runKernel(sv);
+  target.Eeff=k.Eeff; target.rMixed=k.rMixed; target.conf=k.conf; target.svn=k.svn; target.C=k.C; target.floor=k.commitFloor;
+  target.markerX=(ORDER.indexOf(k.verdict)+0.5)/5*100;
+  const flag=k.rules.brake||k.rules.desolation||k.rules.blast||k.rules.urgency;
+  $("vWord").textContent=TITLE[k.verdict];
+  $("vWord").style.color=VCOLOR[k.verdict];
+  $("vReason").innerHTML=(flag?'<span style="color:#C8841C;font-style:normal;font-weight:600">Rule engaged. </span>':"")+k.reason;
+  root.querySelectorAll(".krule").forEach(r=>styleRule(r,!!k.rules[r.dataset.r]));
+  root.querySelectorAll("[data-seg]").forEach(sg=>{
+    const on=sg.dataset.seg===k.verdict;
+    sg.style.color=on?VCOLOR[k.verdict]:"rgba(241,239,232,.4)";
+    sg.style.fontWeight=on?"700":"400";
+  });
+  const dv=$("vDiverge"); dv.style.display="block";
+  dv.textContent = sel.gut!==k.verdict
+    ? `Divergence — your gut said ${TITLE[sel.gut]}, the kernel reads ${TITLE[k.verdict]}. Whichever you act on, the gap gets logged.`
+    : `Alignment — gut and kernel both read ${TITLE[k.verdict]}.`;
+  validate();
+}
+
+/* ═══════════ animation loop ═══════════ */
+function tick(){
+  const e=REDUCED?1:0.12;
+  for(const key in target) disp[key]+=(target[key]-disp[key])*e;
+  drawOrb();
+  updateReadouts();
+  raf=requestAnimationFrame(tick);
+}
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){ if(raf){cancelAnimationFrame(raf);raf=null;} }
+  else if(!raf){ raf=requestAnimationFrame(tick); }
+});
+
+function mix(a,b,t){const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];const x=p(a),y=p(b);return `rgb(${x.map((v,i)=>Math.round(v+(y[i]-v)*t)).join(",")})`;}
+function hexA(hex,a){return `rgba(${parseInt(hex.slice(1,3),16)},${parseInt(hex.slice(3,5),16)},${parseInt(hex.slice(5,7),16)},${a})`;}
+
+function drawOrb(){
+  const cv=$("orb"); if(!cv) return;
+  const dpr=window.devicePixelRatio||1;
+  const cssW=cv.clientWidth||270, cssH=cv.clientHeight||270;
+  if(cv.width!==Math.round(cssW*dpr)){cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);}
+  const ctx=cv.getContext("2d");
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cssW,cssH);
+  const cx=cssW/2, cy=cssH/2, R=Math.min(cssW,cssH)*0.40;
+  const T=REDUCED?0:performance.now()/1000;
+  const phi=Math.max(0,Math.min(1,disp.phi)), H=Math.max(0,Math.min(1,disp.H));
+  const vc=k?VCOLOR[k.verdict]:"#C8841C";
+  const fieldCol=mix("#C8841C","#8A2C1D",phi);
+
+  const vg=ctx.createRadialGradient(cx,cy,R*0.2,cx,cy,R*1.5);
+  vg.addColorStop(0,"rgba(200,132,28,0.05)"); vg.addColorStop(1,"rgba(11,18,32,0)");
+  ctx.fillStyle=vg; ctx.beginPath(); ctx.arc(cx,cy,R*1.5,0,7); ctx.fill();
+
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+  ctx.strokeStyle="rgba(241,239,232,0.16)"; ctx.lineWidth=1; ctx.stroke();
+
+  ctx.beginPath(); ctx.moveTo(cx,cy-R); ctx.lineTo(cx,cy+R);
+  ctx.strokeStyle="rgba(241,239,232,0.07)"; ctx.lineWidth=1; ctx.stroke();
+
+  const rings=5;
+  for(let i=0;i<rings;i++){
+    const baseR=R*(0.30+0.66*i/(rings-1));
+    ctx.beginPath();
+    for(let a=0;a<=64;a++){
+      const ang=a/64*Math.PI*2;
+      const w=phi*(R*0.055)*Math.sin(ang*3+T*1.6+i*1.3)+phi*(R*0.03)*Math.sin(ang*5-T*2.1+i);
+      const r=baseR+w;
+      const x=cx+r*Math.cos(ang), y=cy+r*Math.sin(ang);
+      a===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    const alpha=0.05+0.07*(1-i/rings)+phi*0.05;
+    ctx.strokeStyle=mix(fieldCol,"#F1EFE8",0.15).replace("rgb","rgba").replace(")",","+alpha+")");
+    ctx.lineWidth=1; ctx.stroke();
+  }
+
+  const C=Math.max(0,Math.min(1,disp.C));
+  ctx.beginPath(); ctx.arc(cx,cy,R,-Math.PI/2,-Math.PI/2+Math.PI*2*C);
+  ctx.strokeStyle="rgba(46,87,148,0.85)"; ctx.lineWidth=3; ctx.lineCap="round"; ctx.stroke();
+
+  const conf=Math.max(0,Math.min(1,disp.conf));
+  const dir=(disp.Eeff>=0)?-1:1;
+  const mag=conf*R*0.92;
+  const wob=phi*R*0.16*Math.sin(T*1.7);
+  const px=cx+wob, py=cy+dir*mag;
+
+  const halo=R*(0.10+H*0.44);
+  const hg=ctx.createRadialGradient(px,py,0,px,py,halo);
+  hg.addColorStop(0,hexA(vc,0.32));
+  hg.addColorStop(1,hexA(vc,0));
+  ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(px,py,halo,0,7); ctx.fill();
+
+  if(sel.gut){
+    ctx.shadowColor=vc; ctx.shadowBlur=14;
+    ctx.beginPath(); ctx.arc(px,py,5.5,0,7); ctx.fillStyle=vc; ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.arc(px,py,2,0,7); ctx.fillStyle="#F1EFE8"; ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.arc(cx,cy,3.5,0,7); ctx.fillStyle="rgba(241,239,232,0.4)"; ctx.fill();
+  }
+}
+
+function updateReadouts(){
+  const C=150.8;
+  const conf=Math.max(0,Math.min(1,disp.conf)), coh=Math.max(0,Math.min(1,disp.C));
+  const ca=$("gConfArc"), co=$("gCohArc");
+  if(ca) ca.setAttribute("stroke-dashoffset",(C*(1-conf)).toFixed(1));
+  if(co) co.setAttribute("stroke-dashoffset",(C*(1-coh)).toFixed(1));
+  $("gConfVal").textContent=conf.toFixed(2).slice(1);
+  $("gCohVal").textContent=coh.toFixed(2).slice(1);
+  const sgn=v=>(v>0.005?"+":v<-0.005?"−":"±")+Math.abs(v).toFixed(2).slice(1);
+  $("tEeff").textContent=sgn(disp.Eeff);
+  $("tR").textContent=disp.rMixed.toFixed(3);
+  $("tSvn").textContent=disp.svn.toFixed(3);
+  $("tFloor").textContent=disp.floor.toFixed(2);
+  const dot=$("specDot"); if(dot){ dot.style.left=disp.markerX+"%"; if(k) dot.style.borderTopColor=VCOLOR[k.verdict]; }
+}
+
+/* ═══════════ wiring ═══════════ */
+function wire(){
+  root.addEventListener("click",e=>{
+    const chip=e.target.closest("#domainChips .chip");
+    if(chip){ pickDomain(chip); return; }
+    const g=e.target.closest("#gutChips .gchip");
+    if(g){ pickGut(g); return; }
+    const ab=e.target.closest("#actionRow .actbtn");
+    if(ab){ pickAction(ab); return; }
+    const pc=e.target.closest(".presetChip");
+    if(pc){ applyPreset(+pc.dataset.preset); return; }
+    const tb=e.target.closest(".tabbtn");
+    if(tb){ switchTab(tb.dataset.tab); return; }
+    const sc=e.target.closest(".scoreBtn");
+    if(sc){ score(sc.dataset.id,sc.dataset.outcome); return; }
+    if(e.target.closest("#clearDemoBtn")){ clearDemo(); return; }
+    if(e.target.closest("#logBtn")){ logEntry(); return; }
+  });
+  root.addEventListener("input",e=>{
+    if(e.target.matches("input[type=range]")){ onSlide(e.target); return; }
+    if(e.target.matches("#d_decision,#d_falsify")){ validate(); }
+  });
+  root.addEventListener("change",e=>{
+    if(e.target.id==="oneWay"){ toggleDoor(e.target.checked); }
+  });
+  switchTab("today");
+}
+
+function chipOff(b){ b.style.background="transparent"; b.style.color="#0B1220"; b.style.borderColor="rgba(11,18,32,.14)"; }
+function pickDomain(b){
+  root.querySelectorAll("#domainChips .chip").forEach(chipOff);
+  b.style.background="#1E3A6B"; b.style.color="#F1EFE8"; b.style.borderColor="#1E3A6B";
+  sel.domain=b.dataset.v; validate();
+}
+function pickGut(b){
+  root.querySelectorAll("#gutChips .gchip").forEach(chipOff);
+  const v=b.dataset.v, tox=v==="TOXIC";
+  b.style.background=tox?"#8A2C1D":"#C8841C"; b.style.color=tox?"#F1EFE8":"#0B1220"; b.style.borderColor=tox?"#8A2C1D":"#C8841C";
+  sel.gut=v; recompute();
+}
+function pickAction(b){
+  root.querySelectorAll("#actionRow .actbtn").forEach(c=>{c.style.background="transparent";c.style.color="#0B1220";c.style.borderColor="rgba(11,18,32,.18)";c.querySelector("small").style.color="#8a8880";});
+  const follow=b.dataset.v==="follow";
+  b.style.background=follow?"#C8841C":"#0B1220"; b.style.color=follow?"#0B1220":"#F1EFE8"; b.style.borderColor=follow?"#C8841C":"#0B1220";
+  b.querySelector("small").style.color=follow?"rgba(11,18,32,.6)":"rgba(241,239,232,.6)";
+  sel.action=b.dataset.v; validate();
+}
+
+function fillPct(el){const min=+el.min,max=+el.max,v=+el.value;return (v-min)/(max-min)*100;}
+function paintFill(el){const p=fillPct(el);el.style.background=`linear-gradient(90deg,#C8841C ${p}%,rgba(11,18,32,.14) ${p}%)`;}
+function initSliderFills(){ root.querySelectorAll("input[type=range]").forEach(paintFill); }
+function onSlide(el){
+  const key=el.dataset.k, v=parseFloat(el.value);
+  sv[key]=v; paintFill(el);
+  const lab=$("v_"+key);
+  if(lab) lab.textContent = key==="E" ? (v>0?"+":v<0?"−":"±")+Math.abs(v).toFixed(2).slice(1) : v.toFixed(2).slice(1);
+  recompute();
+}
+function toggleDoor(on){
+  sv.oneWay=on;
+  const w=$("doorWrap"),s=$("doorSwitch"),kn=$("doorKnob");
+  w.style.borderColor=on?"#C8841C":"rgba(11,18,32,.12)";
+  w.style.background=on?"rgba(200,132,28,.06)":"transparent";
+  s.style.background=on?"#C8841C":"#E7E4D9";
+  kn.style.transform=on?"translateX(17px)":"none"; kn.style.background=on?"#FBFAF6":"#5F5E5A";
+  recompute();
+}
+
+function applyPreset(i){
+  const p=PRESETS[i]; if(!p) return;
+  $("d_decision").value=p.decision;
+  root.querySelectorAll("#domainChips .chip").forEach(c=>{ if(c.dataset.v===p.domain) pickDomain(c); });
+  ["E","P","H","PHI","S","B","T"].forEach(key=>{
+    const el=root.querySelector(`input[data-k="${key}"]`);
+    el.value=p[key]; onSlide(el);
+  });
+  $("oneWay").checked=p.oneWay; toggleDoor(p.oneWay);
+  root.querySelectorAll("#gutChips .gchip").forEach(c=>{ if(c.dataset.v===p.gut) pickGut(c); });
+  const inst=$("instrument"), sc=$("scroll");
+  if(inst&&sc) sc.scrollTo({top:inst.offsetTop-90,behavior:REDUCED?"auto":"smooth"});
+}
+
+function validate(){
+  const ok=sel.domain&&sel.gut&&k&&sel.action
+    &&$("d_decision").value.trim().length>3
+    &&$("d_falsify").value.trim().length>3;
+  const b=$("logBtn");
+  b.disabled=!ok; b.style.opacity=ok?"1":"0.35"; b.style.cursor=ok?"pointer":"not-allowed";
+}
+
+/* ═══════════ storage ═══════════ */
+function loadAll(){try{return JSON.parse(localStorage.getItem(STORE))||[];}catch(e){return[];}}
+function saveAll(a){try{localStorage.setItem(STORE,JSON.stringify(a));}catch(e){}}
+function loadOrSeed(){
+  let all=loadAll();
+  if(all.length===0){ all=demoSeed(); saveAll(all); }
+  entries=all;
+}
+function demoSeed(){
+  const day=864e5, now=Date.now();
+  const mk=o=>Object.assign({id:Math.random().toString(36).slice(2),kernelVersion:"v11",demo:true},o);
+  return [
+    mk({ts:new Date(now-3*day).toISOString(),domain:"money",decision:"Take the job offer from the smaller firm.",gut:"COMMIT",verdict:"COMMIT",confidence:0.61,coherence:0.68,action:"follow",falsification:"I feel energized after 30 days, not drained.",checkin:new Date(now+11*day).toISOString().slice(0,10),outcome:null,scored:false}),
+    mk({ts:new Date(now-9*day).toISOString(),domain:"people",decision:"End the friendship that keeps hurting me.",gut:"WAIT",verdict:"TOXIC",confidence:0.44,coherence:0.5,action:"follow",falsification:"Less anxiety in two weeks.",checkin:new Date(now-2*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
+    mk({ts:new Date(now-12*day).toISOString(),domain:"voice",decision:"Post the callout about my old employer.",gut:"COMMIT",verdict:"CONSULT",confidence:0.38,coherence:0.42,action:"override",falsification:"No legal or reputational blowback in 30 days.",checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:"didnt",scored:true}),
+    mk({ts:new Date(now-18*day).toISOString(),domain:"body",decision:"Push through the injury and race anyway.",gut:"HOLD",verdict:"WAIT",confidence:0.3,coherence:0.4,action:"follow",falsification:"Pain-free within a week.",checkin:new Date(now-4*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
+    mk({ts:new Date(now-22*day).toISOString(),domain:"time",decision:"Move across the country for a fresh start.",gut:"COMMIT",verdict:"CONSULT",confidence:0.36,coherence:0.4,action:"override",falsification:"No regret at 60 days.",checkin:new Date(now-6*day).toISOString().slice(0,10),outcome:"mixed",scored:true}),
+    mk({ts:new Date(now-26*day).toISOString(),domain:"money",decision:"Sell the index position to cover the renovation.",gut:"WAIT",verdict:"HOLD",confidence:0.47,coherence:0.55,action:"follow",falsification:"Portfolio intact and reno funded another way.",checkin:new Date(now-8*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
+    mk({ts:new Date(now-31*day).toISOString(),domain:"people",decision:"Say yes to being the maid of honor.",gut:"COMMIT",verdict:"COMMIT",confidence:0.66,coherence:0.72,action:"follow",falsification:"No resentment about the time cost by the wedding.",checkin:new Date(now-14*day).toISOString().slice(0,10),outcome:"worked",scored:true}),
+    mk({ts:new Date(now-4*day).toISOString(),domain:"voice",decision:"Ask for the raise before the review cycle.",gut:"HOLD",verdict:"WAIT",confidence:0.33,coherence:0.45,action:"follow",falsification:"A clear yes/no within the month.",checkin:new Date(now-1*day).toISOString().slice(0,10),outcome:null,scored:false})
+  ];
+}
+function clearDemo(){
+  entries=entries.filter(e=>!e.demo);
+  saveAll(entries);
+  renderReview(); renderInsights();
+}
+
+function logEntry(){
+  const entry={
+    id:Date.now().toString(36), ts:new Date().toISOString(), domain:sel.domain,
+    decision:$("d_decision").value.trim(), gut:sel.gut,
+    entropy:sv.H,stakes:sv.S,evidence:sv.E,provenance:sv.P,interference:sv.PHI,blastRadius:sv.B,timePressure:sv.T,oneWay:sv.oneWay,
+    verdict:k.verdict, confidence:+k.conf.toFixed(3), coherence:+k.C.toFixed(3),
+    eEff:+k.Eeff.toFixed(3), rMixed:+k.rMixed.toFixed(4), vnEntropy:+k.svn.toFixed(4),
+    rulesEngaged:Object.keys(k.rules).filter(r=>k.rules[r]),
+    action:sel.action, falsification:$("d_falsify").value.trim(),
+    checkin:$("d_checkin").value, notes:$("d_notes").value.trim(),
+    outcome:null, scored:false, kernelVersion:K.version
+  };
+  entries.push(entry); saveAll(entries);
+  const n=$("logNote"); n.textContent="Logged. AMDG."; n.style.color="#C8841C";
+  const b=$("logBtn"); b.disabled=true; b.style.opacity="0.35";
+  renderReview(); renderInsights();
+  setTimeout(()=>{n.textContent="stored privately in your journal";n.style.color="#8a8880";},3500);
+}
+
+function score(id,outcome){
+  const e=entries.find(x=>x.id===id); if(!e) return;
+  e.outcome=outcome; e.scored=true; saveAll(entries);
+  renderReview(); renderInsights();
+}
+
+/* ═══════════ review render ═══════════ */
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function fmtDate(iso){try{return new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric"});}catch(e){return iso;}}
+
+function renderReview(){
+  const today=new Date().toISOString().slice(0,10);
+  const due=entries.filter(e=>!e.scored&&e.checkin&&e.checkin<=today).sort((a,b)=>a.checkin<b.checkin?-1:1);
+  const list=$("reviewList"), empty=$("reviewEmpty");
+  if(due.length===0){ list.innerHTML=""; empty.style.display="block"; }
+  else{
+    empty.style.display="none";
+    list.innerHTML=due.map(e=>{
+      const vc=VCOLOR[e.verdict]||"#5F5E5A";
+      return `<div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 8px 22px -18px rgba(11,18,32,.4)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#a89f8c">${esc(e.domain)} · due ${fmtDate(e.checkin)}${e.demo?' · demo':''}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:${vc};font-weight:700">${e.verdict}</span>
+        </div>
+        <div style="font-family:'Newsreader',serif;font-size:18px;line-height:1.3;margin:8px 0 6px">${esc(e.decision)}</div>
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:13px;color:#5F5E5A;border-left:2px solid rgba(11,18,32,.14);padding-left:10px">Test: ${esc(e.falsification)}</div>
+        <div style="font:500 11.5px Inter;color:#8a8880;margin:14px 0 8px">Did it work?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+          <button class="scoreBtn" data-id="${e.id}" data-outcome="worked" style="font:600 13px Inter;padding:10px 4px;border:1px solid rgba(11,18,32,.15);border-radius:10px;background:transparent;color:#1F8A5B;cursor:pointer">Worked</button>
+          <button class="scoreBtn" data-id="${e.id}" data-outcome="mixed" style="font:600 13px Inter;padding:10px 4px;border:1px solid rgba(11,18,32,.15);border-radius:10px;background:transparent;color:#9B7B3A;cursor:pointer">Mixed</button>
+          <button class="scoreBtn" data-id="${e.id}" data-outcome="didnt" style="font:600 13px Inter;padding:10px 4px;border:1px solid rgba(11,18,32,.15);border-radius:10px;background:transparent;color:#8A2C1D;cursor:pointer">Didn't</button>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  const recent=[...entries].sort((a,b)=>a.ts<b.ts?1:-1).slice(0,8);
+  const oc={worked:"#1F8A5B",mixed:"#9B7B3A",didnt:"#8A2C1D",null:"rgba(11,18,32,.2)"};
+  $("histStrip").innerHTML=recent.map(e=>{
+    const vc=VCOLOR[e.verdict]||"#5F5E5A";
+    const align=e.gut===e.verdict;
+    const dot=oc[e.outcome]||oc.null;
+    return `<div style="display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid rgba(11,18,32,.07)">
+      <span style="width:8px;height:8px;border-radius:50%;background:${dot};flex-shrink:0"></span>
+      <div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.decision)}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:#a89f8c;margin-top:1px">${esc(e.domain)} · ${fmtDate(e.ts)}${e.demo?' · demo':''}</div></div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;color:${vc}">${e.verdict}</span>
+      <span title="${align?'aligned':'diverged'}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${align?'rgba(11,18,32,.25)':'#C8841C'}">${align?'=':'≠'}</span>
+    </div>`;
+  }).join("");
+}
+
+/* ═══════════ insights render ═══════════ */
+function renderInsights(){
+  const all=entries, total=all.length;
+  const scored=all.filter(e=>e.scored&&e.outcome);
+  const scoreOf=e=>e.outcome==="worked"?1:e.outcome==="mixed"?0.5:0;
+  const rate=arr=>arr.length?arr.reduce((s,e)=>s+scoreOf(e),0)/arr.length:null;
+  const fol=scored.filter(e=>e.action==="follow"), ovr=scored.filter(e=>e.action==="override");
+  const fr=rate(fol), or_=rate(ovr);
+  $("liftFollow").textContent=fr==null?"—":Math.round(fr*100)+"%";
+  $("liftOverride").textContent=or_==null?"—":Math.round(or_*100)+"%";
+  const delta=(fr!=null&&or_!=null)?Math.round((fr-or_)*100):null;
+  $("liftDelta").textContent=delta==null?"—":(delta>=0?"+":"−")+Math.abs(delta);
+  const hasDemo=all.some(e=>e.demo);
+  $("liftCaveat").style.display=hasDemo?"block":"none";
+  $("demoRow").style.display=hasDemo?"block":"none";
+  const aligned=total?all.filter(e=>e.gut===e.verdict).length/total:0;
+  $("statEntries").textContent=total;
+  $("statAlign").textContent=Math.round(aligned*100)+"%";
+  $("statScored").textContent=scored.length;
+  const doms={}; all.forEach(e=>{(doms[e.domain]=doms[e.domain]||[]).push(e);});
+  const names=Object.keys(doms).sort((a,b)=>doms[b].length-doms[a].length);
+  const maxN=Math.max(1,...names.map(n=>doms[n].length));
+  $("domainPatterns").innerHTML=names.map(n=>{
+    const arr=doms[n];
+    const counts={}; arr.forEach(e=>counts[e.verdict]=(counts[e.verdict]||0)+1);
+    const dom=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
+    const vc=VCOLOR[dom]||"#5F5E5A";
+    const w=arr.length/maxN*100;
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+        <span style="font:500 13px Inter;text-transform:capitalize">${esc(n)}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#a89f8c">${arr.length} · leans <span style="color:${vc};font-weight:700">${TITLE[dom]||dom}</span></span>
+      </div>
+      <div style="height:7px;border-radius:4px;background:rgba(11,18,32,.07);overflow:hidden"><span style="display:block;height:100%;width:${w}%;background:${vc};border-radius:4px"></span></div>
+    </div>`;
+  }).join("");
+}
+
+/* ═══════════ tabs ═══════════ */
+function switchTab(tab){
+  ["today","review","insights"].forEach(t=>{
+    const sec=$("tab-"+t); if(sec) sec.hidden = t!==tab;
+  });
+  root.querySelectorAll(".tabbtn").forEach(b=>{
+    const on=b.dataset.tab===tab;
+    b.style.color=on?"#C8841C":"#9a978e";
+    b.querySelector("span").style.color=on?"#0B1220":"#9a978e";
+  });
+  const sc=$("scroll"); if(sc) sc.scrollTop=0;
+  const cur=$("tab-"+tab); if(cur&&!REDUCED){cur.style.animation="none"; void cur.offsetWidth; cur.style.animation="exUp .35s ease";}
+}
+
+/* ═══════════ boot ═══════════ */
+function setTopDate(){
+  const d=new Date();
+  $("topDate").textContent=d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}).toUpperCase();
+  const ci=$("d_checkin"); if(ci){const c=new Date();c.setDate(c.getDate()+14);ci.value=c.toISOString().slice(0,10);}
+}
+function boot(){
+  setTopDate();
+  wire();
+  initSliderFills();
+  loadOrSeed();
+  renderReview();
+  renderInsights();
+  recompute();
+  raf=requestAnimationFrame(tick);
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
+else boot();
+
+})();
+</script>
+</body>
+</html>
