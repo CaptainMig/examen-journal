@@ -18,8 +18,13 @@
   a:hover{color:#C8841C}
   #examen-app ::-webkit-scrollbar{width:0;height:0}
   #examen-app{scrollbar-width:none}
-  #examen-app input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;cursor:pointer;outline:none;background:rgba(11,18,32,.14)}
-  #examen-app input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#FBFAF6;border:2.5px solid #C8841C;box-shadow:0 1px 3px rgba(11,18,32,.25);cursor:grab;margin-top:-9.5px}
+  /* 44px hit area (WCAG touch target) with the visual track kept at 3px, centered via
+     background-size/position. touch-action:none keeps a horizontal drag on the slider so
+     the browser never re-interprets it as a page pan. Fill is painted onto background-image
+     (see paintFill) so it doesn't reset background-size/position. */
+  #examen-app input[type=range]{-webkit-appearance:none;appearance:none;width:100%;min-height:44px;height:44px;cursor:pointer;outline:none;border-radius:0;background-color:transparent;background-image:linear-gradient(rgba(11,18,32,.14),rgba(11,18,32,.14));background-repeat:no-repeat;background-position:center;background-size:100% 3px;touch-action:none}
+  #examen-app input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#FBFAF6;border:2.5px solid #C8841C;box-shadow:0 1px 3px rgba(11,18,32,.25);cursor:grab;margin-top:0}
+  #examen-app input[type=range]::-moz-range-track{height:3px;background:transparent;border:none}
   #examen-app input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#FBFAF6;border:2.5px solid #C8841C;box-shadow:0 1px 3px rgba(11,18,32,.25);cursor:grab}
   #examen-app input[type=range]:focus-visible{outline:2px solid #1E3A6B;outline-offset:6px}
   #examen-app input[type=text],#examen-app textarea,#examen-app input[type=date]{width:100%;background:transparent;border:none;border-bottom:1px solid rgba(11,18,32,.28);font-family:"Newsreader",Georgia,serif;font-size:19px;color:#0B1220;padding:6px 2px 8px;border-radius:0;resize:none}
@@ -28,6 +33,9 @@
   #examen-app input:focus-visible,#examen-app textarea:focus-visible{outline:none;border-bottom:2px solid #C8841C;padding-bottom:7px}
   #examen-app input[type=date]{font-family:"JetBrains Mono",monospace;font-size:15px;max-width:210px}
   @keyframes exUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  /* first-arm nudge: soft amber outline pulse to pull the eye to the sliders */
+  @keyframes exPulse{0%{box-shadow:0 0 0 0 rgba(200,132,28,0)}25%{box-shadow:0 0 0 3px rgba(200,132,28,.45)}100%{box-shadow:0 0 0 0 rgba(200,132,28,0)}}
+  #examen-app .nudge{animation:exPulse 1.5s ease}
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
   /* app shell: full-viewport on phones, framed column on desktop */
@@ -44,17 +52,21 @@
      the browser would adjust scrollTop to keep content stable, which fights the pin and
      causes a stick/unstick oscillation. */
   #scroll{overflow-anchor:none}
-  #instrument{position:sticky;top:0;z-index:30;transition:box-shadow .3s ease,padding .3s ease}
+  /* The compact toggle changes the instrument's HEIGHT instantly (no layout transition):
+     setStuck() measures the height delta and compensates #scroll.scrollTop synchronously in
+     the same frame, so content below never shifts under the finger. Animating the height
+     would require per-frame scroll compensation (rAF-dependent → unreliable when throttled).
+     Only box-shadow (non-layout) transitions, for a little polish. */
+  #instrument{position:sticky;top:0;z-index:30;transition:box-shadow .25s ease}
   #instrument.stuck{padding-top:12px!important;padding-bottom:14px!important;box-shadow:0 22px 42px -14px rgba(0,0,0,.72),0 8px 20px -8px rgba(0,0,0,.55)!important}
-  /* orb compaction via transform on a wrapper — the draw loop rewrites the canvas
-     width/height attributes every frame, so transitioning the canvas height directly
-     gets restarted perpetually. Scaling a wrapper sidesteps that. */
-  #orbWrap{display:flex;align-items:center;justify-content:center;height:270px;overflow:hidden;margin:2px auto 4px;transition:height .3s ease}
-  #orb{transition:transform .3s ease;transform-origin:center center}
+  /* orb compaction via transform on a wrapper — the draw loop rewrites the canvas width/height
+     attributes every frame, so scaling a wrapper (not the canvas) avoids fighting that. */
+  #orbWrap{display:flex;align-items:center;justify-content:center;height:270px;overflow:hidden;margin:2px auto 4px}
+  #orb{transform-origin:center center}
   #instrument.stuck #orbWrap{height:152px}
   #instrument.stuck #orb{transform:scale(.56)}
-  #instrument .compactHide{transition:max-height .35s ease,opacity .25s ease,margin .35s ease,padding .35s ease;max-height:280px;overflow:hidden}
-  #instrument.stuck .compactHide{max-height:0!important;opacity:0;margin-top:0!important;padding-top:0!important;pointer-events:none}
+  #instrument .compactHide{overflow:hidden}
+  #instrument.stuck .compactHide{max-height:0!important;margin-top:0!important;padding-top:0!important;opacity:0;pointer-events:none}
   #instrument.stuck #vReason{min-height:0!important}
 </style>
 </head>
@@ -73,6 +85,16 @@
 
     <!-- ══════════ TODAY ══════════ -->
     <section id="tab-today" style="padding:20px 20px 40px">
+
+      <!-- first-run note (dismissible, shown once) -->
+      <div id="introCard" style="display:none;position:relative;background:#FBFAF6;border:1px solid rgba(11,18,32,.12);border-radius:16px;padding:15px 40px 15px 16px;margin-bottom:20px;box-shadow:0 10px 26px -22px rgba(11,18,32,.5)">
+        <button id="introClose" aria-label="Dismiss" style="position:absolute;top:8px;right:10px;background:none;border:none;cursor:pointer;font-size:15px;line-height:1;color:#a89f8c;padding:5px">✕</button>
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:#5F5E5A">
+          <div>How this works: your written decision is a label — the instrument never reads it.</div>
+          <div style="margin-top:5px">You measure the situation with the seven sliders; the kernel combines your measurements and applies the brakes.</div>
+          <div style="margin-top:5px">Gut first, so the machine can't sway you.</div>
+        </div>
+      </div>
 
       <div style="margin-bottom:6px">
         <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#a89f8c">Today's examen</div>
@@ -113,6 +135,7 @@
         <div style="margin-bottom:24px">
           <div style="font:500 12.5px Inter;color:#8a8880;margin-bottom:6px">What are you deciding?</div>
           <textarea id="d_decision" rows="2" placeholder="Say it in one sentence…"></textarea>
+          <div style="font-family:'Newsreader',serif;font-style:italic;font-size:11.5px;line-height:1.4;color:#5F6B7A;margin-top:7px">A label for your journal — the kernel reads the sliders, not the words.</div>
         </div>
 
         <div style="margin-bottom:4px">
@@ -149,7 +172,7 @@
 
           <div style="text-align:center;margin-top:-6px">
             <div id="vWord" style="font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:.01em;line-height:1;color:#F1EFE8">—</div>
-            <div id="vReason" class="compactHide" style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:rgba(241,239,232,.62);margin:9px auto 0;max-width:300px;min-height:40px">Choose your gut read above to arm the instrument.</div>
+            <div id="vReason" class="compactHide" style="font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:rgba(241,239,232,.62);margin:9px auto 0;max-width:320px;min-height:40px">Pick your gut read to arm the instrument — then describe the situation with the sliders below. The reading updates live as you drag.</div>
           </div>
 
           <!-- verdict spectrum -->
@@ -203,7 +226,7 @@
         <!-- controls: three clusters -->
         <div style="margin-top:20px">
           <div style="font:600 11px 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#a89f8c;margin:0 0 10px 2px">Signal — what the evidence says</div>
-          <div style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:16px;padding:16px 16px 6px">
+          <div id="signalCluster" style="background:#FBFAF6;border:1px solid rgba(11,18,32,.08);border-radius:16px;padding:16px 16px 6px">
             <div style="margin-bottom:16px">
               <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px"><span style="font:500 13px Inter;color:#0B1220">Evidence direction</span><span id="v_E" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#C8841C">±.00</span></div>
               <input type="range" data-k="E" min="-1" max="1" step="0.05" value="0" aria-label="Evidence direction">
@@ -417,6 +440,14 @@ const root=document.getElementById("examen-app");
 const $=id=>root.querySelector("#"+id);
 const instrument=$("instrument");
 
+/* sticky + touch state (shared across the loop, sticky logic, and drag guards) */
+let dragging=false;   // a range slider is under an active pointer
+let compacting=false; // the instrument is mid compact/expand transition
+let stuck=false;      // instrument currently pinned+compact
+let pin=0;            // frozen scrollTop at which the sentinel reaches the pin line
+let compactTimer=null;
+let armedOnce=false;  // first-arm nudge fires once per session
+
 /* ═══════════ kernel — v11.1 (recalibrated; see K block) ═══════════ */
 function vonNeumann(r){const lp=(1+r)/2,lm=(1-r)/2,t=x=>x<=0?0:-x*Math.log2(x);return t(lp)+t(lm);}
 function runKernel(s){
@@ -454,7 +485,7 @@ function recompute(){
   if(!sel.gut){
     k=null; target.Eeff=0; target.rMixed=0; target.conf=0; target.svn=0;
     $("vWord").textContent="—"; $("vWord").style.color="#F1EFE8";
-    $("vReason").textContent="Choose your gut read above to arm the instrument.";
+    $("vReason").textContent="Pick your gut read to arm the instrument — then describe the situation with the sliders below. The reading updates live as you drag.";
     $("vDiverge").style.display="none";
     root.querySelectorAll(".krule").forEach(r=>styleRule(r,false));
     root.querySelectorAll("[data-seg]").forEach(sg=>{sg.style.color="rgba(241,239,232,.4)";sg.style.fontWeight="400";});
@@ -599,6 +630,7 @@ function wire(){
     const sc=e.target.closest(".scoreBtn");
     if(sc){ score(sc.dataset.id,sc.dataset.outcome); return; }
     if(e.target.closest("#clearDemoBtn")){ clearDemo(); return; }
+    if(e.target.closest("#introClose")){ dismissIntro(); return; }
     if(e.target.closest("#logBtn")){ logEntry(); return; }
   });
   root.addEventListener("input",e=>{
@@ -622,6 +654,12 @@ function pickGut(b){
   const v=b.dataset.v, tox=v==="TOXIC";
   b.style.background=tox?"#8A2C1D":"#C8841C"; b.style.color=tox?"#F1EFE8":"#0B1220"; b.style.borderColor=tox?"#8A2C1D":"#C8841C";
   sel.gut=v; recompute();
+  // first arm this session: pulse the Signal cluster to pull the eye down to the sliders
+  if(!armedOnce){
+    armedOnce=true;
+    const sig=$("signalCluster");
+    if(sig&&!REDUCED){ sig.classList.add("nudge"); setTimeout(()=>sig.classList.remove("nudge"),1600); }
+  }
 }
 function pickAction(b){
   root.querySelectorAll("#actionRow .actbtn").forEach(c=>{c.style.background="transparent";c.style.color="#0B1220";c.style.borderColor="rgba(11,18,32,.18)";c.querySelector("small").style.color="#8a8880";});
@@ -632,7 +670,7 @@ function pickAction(b){
 }
 
 function fillPct(el){const min=+el.min,max=+el.max,v=+el.value;return (v-min)/(max-min)*100;}
-function paintFill(el){const p=fillPct(el);el.style.background=`linear-gradient(90deg,#C8841C ${p}%,rgba(11,18,32,.14) ${p}%)`;}
+function paintFill(el){const p=fillPct(el);el.style.backgroundImage=`linear-gradient(90deg,#C8841C ${p}%,rgba(11,18,32,.14) ${p}%)`;}
 function initSliderFills(){ root.querySelectorAll("input[type=range]").forEach(paintFill); }
 function onSlide(el){
   const key=el.dataset.k, v=parseFloat(el.value);
@@ -820,32 +858,72 @@ function switchTab(tab){
     b.querySelector("span").style.color=on?"#0B1220":"#9a978e";
   });
   const sc=$("scroll"); if(sc) sc.scrollTop=0;
-  const inst=$("instrument"); if(inst) inst.classList.remove("stuck"); // release when tab resets to top
+  setStuck(false); compacting=false; // release when tab resets to top
   const cur=$("tab-"+tab); if(cur&&!REDUCED){cur.style.animation="none"; void cur.offsetWidth; cur.style.animation="exUp .35s ease";}
 }
 
 /* ═══════════ sticky instrument ═══════════ */
+// Toggle the compact state. The height change is instant (no layout transition), so we can
+// measure the delta and compensate #scroll.scrollTop synchronously in the same frame — content
+// below the instrument stays visually stationary under the finger, with no rAF dependence.
+// The frozen `pin` is shifted by the same delta so this self-induced scroll isn't mistaken for
+// a user scroll toward the release threshold (which would otherwise oscillate the state).
+function setStuck(on){
+  if(on===stuck){ return; }
+  const sc=$("scroll");
+  const h0=instrument.offsetHeight;
+  stuck=on;
+  compacting=true;                        // ignore the scroll event our own adjustment fires
+  instrument.classList.toggle("stuck",on);
+  const d=instrument.offsetHeight-h0;     // instant height change → true delta now
+  if(d && sc){ sc.scrollTop+=d; pin+=d; }
+  clearTimeout(compactTimer);
+  compactTimer=setTimeout(()=>{ compacting=false; },80); // brief: just long enough to skip the self-scroll
+}
 function initSticky(){
   const sc=$("scroll"), inst=instrument, sen=$("instStick");
   if(!sc||!inst||!sen) return;
-  // Scroll-driven with a hysteresis band. An IntersectionObserver on a sentinel this
-  // close to the element flickers: compacting reflows layout, nudging the sentinel back
-  // across the threshold, which un-sticks → un-compacts → re-crosses, forever. Separate
-  // engage (−8px past the pin) and release (+8px) thresholds make a sub-pixel reflow
-  // unable to flip the state.
-  let stuck=false, pin=0;
+  // Scroll-driven with a hysteresis band + a frozen pin. An IntersectionObserver on a
+  // sentinel this close to the element flickers: compacting reflows layout, nudging it back
+  // across the threshold. Separate engage (−8px) / release (+8px) thresholds, plus freezing
+  // `pin` on engage, make a sub-pixel reflow unable to flip the state. Evaluation is
+  // suspended during a drag or a compact transition so neither can toggle mid-gesture.
   const evaluate=()=>{
-    if(sen.offsetParent===null){ if(stuck){stuck=false;inst.classList.remove("stuck");} return; } // Today tab hidden
+    if(dragging||compacting) return;
+    if(sen.offsetParent===null){ setStuck(false); return; } // Today tab hidden
     const y=sc.scrollTop;
     if(!stuck){
-      // layout is stable while unstuck — read the sentinel's content-space position live
-      pin = sen.getBoundingClientRect().top - sc.getBoundingClientRect().top + y;
-      if(y > pin+8){ stuck=true; inst.classList.add("stuck"); } // freeze `pin`; compaction won't move scrollTop
-    } else if(y < pin-8){ stuck=false; inst.classList.remove("stuck"); }
+      pin = sen.getBoundingClientRect().top - sc.getBoundingClientRect().top + y; // live while stable
+      if(y > pin+8) setStuck(true);
+    } else if(y < pin-8) setStuck(false);
   };
   sc.addEventListener("scroll",evaluate,{passive:true});
   window.addEventListener("resize",evaluate,{passive:true});
+
+  // ── touch/drag guards (Task 1) ──
+  // Track an active slider drag so we can suspend sticky evaluation and block focus theft.
+  root.addEventListener("pointerdown",ev=>{ if(ev.target.matches('input[type=range]')) dragging=true; },true);
+  const endDrag=()=>{ if(dragging){ dragging=false; evaluate(); } };
+  window.addEventListener("pointerup",endDrag,true);
+  window.addEventListener("pointercancel",endDrag,true);
+  // No focus theft: if anything tries to focus a text field mid-drag, refuse it (prevents the
+  // Android "jump to textarea + keyboard" when a touch drifts off the thin track).
+  root.addEventListener("focusin",ev=>{
+    if(dragging && ev.target.matches('input[type=text],input[type=date],textarea')){ ev.preventDefault(); ev.target.blur(); }
+  },true);
+
   evaluate();
+}
+
+/* ═══════════ first-run note ═══════════ */
+const INTRO_KEY="examen_intro_seen"; // separate from examen_v1 journal store
+function showIntroIfNew(){
+  let seen=false; try{ seen=!!localStorage.getItem(INTRO_KEY); }catch(e){}
+  const card=$("introCard"); if(card&&!seen) card.style.display="block";
+}
+function dismissIntro(){
+  try{ localStorage.setItem(INTRO_KEY,"1"); }catch(e){}
+  const card=$("introCard"); if(card) card.style.display="none";
 }
 
 /* ═══════════ boot ═══════════ */
@@ -863,6 +941,7 @@ function boot(){
   renderInsights();
   recompute();
   initSticky();
+  showIntroIfNew();
   raf=requestAnimationFrame(tick);
 }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",boot);
