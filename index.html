@@ -40,11 +40,23 @@
 
   /* app shell: full-viewport on phones, framed column on desktop */
   #shell{height:100dvh;display:flex;align-items:stretch;justify-content:center}
-  #examen-app{height:100%;width:100%;max-width:460px;display:flex;flex-direction:column;background:#F1EFE8;color:#0B1220;font-size:16px;padding-top:env(safe-area-inset-top)}
+  #examen-app{position:relative;height:100%;width:100%;max-width:460px;display:flex;flex-direction:column;background:#F1EFE8;color:#0B1220;font-size:16px;padding-top:env(safe-area-inset-top)}
   @media (min-width:520px){
     #shell{align-items:center;background:radial-gradient(130% 130% at 50% -10%,#eceae4 0%,#e0ded6 55%,#d5d3ca 100%);padding:26px 20px}
     #examen-app{height:min(874px,94dvh);border-radius:34px;box-shadow:0 40px 90px -40px rgba(11,18,32,.55),0 0 0 1px rgba(11,18,32,.08);overflow:hidden;padding-top:14px}
   }
+
+  /* guide overlay — a full-screen page over the app; show/hide only, no routing,
+     so closing returns to exactly where the user was */
+  #guide{position:absolute;inset:0;z-index:60;background:#F1EFE8;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+  #guide[hidden]{display:none}
+  #guide .gkick{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#a89f8c;margin:30px 0 10px}
+  #guide .gp{font-family:'Newsreader',Georgia,serif;font-size:16.5px;line-height:1.55;color:#0B1220;margin:0 0 12px}
+  #guide .gdef{font-family:'Newsreader',Georgia,serif;font-size:15.5px;line-height:1.5;color:#0B1220;margin:0 0 9px;padding-left:12px;border-left:2px solid rgba(11,18,32,.1)}
+  #guide .gdef b{font-weight:600}
+  #guide .gnote{font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;line-height:1.5;color:#5F5E5A;margin:0 0 12px}
+  #guideBtn:focus,#guideClose:focus{outline:none}
+  #guideBtn:focus-visible,#guideClose:focus-visible{outline:2px solid #1E3A6B;outline-offset:2px;border-radius:8px}
 
   /* sticky "discern" instrument — pins below the app bar while the slider clusters
      scroll underneath, and compresses so it doesn't eat the phone viewport */
@@ -75,9 +87,14 @@
 <div id="examen-app">
 
   <!-- top bar -->
-  <div style="display:flex;align-items:baseline;justify-content:space-between;padding:8px 22px 12px;border-bottom:1px solid rgba(11,18,32,.09)">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 22px 12px;border-bottom:1px solid rgba(11,18,32,.09)">
     <div style="font-family:'Newsreader',serif;font-weight:600;font-size:23px;letter-spacing:-.01em">Examen<span style="color:#C8841C">.</span></div>
-    <div id="topDate" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;color:#8a8880">—</div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <div id="topDate" style="font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.06em;color:#8a8880">—</div>
+      <button id="guideBtn" aria-label="Open guide" style="width:44px;height:44px;margin:-12px -15px -12px -3px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#5F6B7A;flex-shrink:0">
+        <span style="width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font:600 11.5px Inter;line-height:1">?</span>
+      </button>
+    </div>
   </div>
 
   <!-- scroll area -->
@@ -93,6 +110,7 @@
           <div>How this works: your written decision is a label — the instrument never reads it.</div>
           <div style="margin-top:5px">You measure the situation with the seven sliders; the kernel combines your measurements and applies the brakes.</div>
           <div style="margin-top:5px">Gut first, so the machine can't sway you.</div>
+          <button id="introGuide" style="background:none;border:none;padding:0;margin-top:9px;cursor:pointer;font-family:'Newsreader',serif;font-style:italic;font-size:13.5px;color:#1E3A6B;border-bottom:1px solid rgba(30,58,107,.35)">How this works</button>
         </div>
       </div>
 
@@ -389,6 +407,57 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
       <span style="font:600 10px Inter;letter-spacing:.02em">Insights</span>
     </button>
+  </div>
+
+  <!-- ══════════ GUIDE (overlay page) ══════════ -->
+  <div id="guide" hidden>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 22px 12px;border-bottom:1px solid rgba(11,18,32,.09);flex-shrink:0">
+      <div style="font-family:'Newsreader',serif;font-weight:600;font-size:23px;letter-spacing:-.01em">Guide<span style="color:#C8841C">.</span></div>
+      <button id="guideClose" aria-label="Close guide" style="width:44px;height:44px;margin:-12px -15px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#5F5E5A;font-size:17px;line-height:1;flex-shrink:0">✕</button>
+    </div>
+    <div id="guideScroll" style="flex:1;overflow-y:auto;padding:6px 22px 56px">
+
+      <div class="gkick">What this is</div>
+      <p class="gp">The examen is a centuries-old daily practice of review: recollect what happened, discern what it means, resolve what to do. This app rebuilds that practice as a decision instrument. You record a decision, your gut read, and your measurements of the situation; the kernel weighs them and applies the brakes; later, you score what actually happened. The point is not the verdict — it is the record.</p>
+
+      <div class="gkick">How a reading works</div>
+      <p class="gp">Your written decision is a label for your journal. The kernel never reads your words — it reads the sliders.</p>
+      <p class="gp">Your gut comes first, and picking it is what arms the instrument. The machine stays silent until you have committed a first read it cannot sway.</p>
+      <p class="gp">Then you measure the situation, seven ways:</p>
+      <div class="gdef"><b>Evidence</b> — which way the facts lean, for or against.</div>
+      <div class="gdef"><b>Provenance</b> — how verified those facts are, from hearsay to firsthand.</div>
+      <div class="gdef"><b>Uncertainty</b> — how legible the situation is; how much of it you can actually read.</div>
+      <div class="gdef"><b>Interference</b> — how emotionally charged you are right now.</div>
+      <div class="gdef"><b>Stakes</b> — how much this decision matters.</div>
+      <div class="gdef"><b>Blast radius</b> — how many others bear the cost if it goes wrong.</div>
+      <div class="gdef"><b>Time pressure</b> — how fast the window is closing.</div>
+      <p class="gp" style="margin-top:14px">The kernel multiplies; it does not average. One weak measurement caps the whole reading — strong evidence from an unverified source stays weak, however strong it feels. This is deliberate: the kernel is a brake, not an oracle. The <span style="font-family:'JetBrains Mono',monospace;font-size:13px">held down by</span> line under the verdict names whichever measurement is doing the holding.</p>
+
+      <div class="gkick">The five verdicts</div>
+      <div class="gdef"><b style="color:#C8841C">Commit</b> — the evidence is for, the reading is clear, and confidence clears the floor for these stakes. Act.</div>
+      <div class="gdef"><b style="color:#9B7B3A">Hold</b> — the direction is favorable, but confidence sits below the commit floor. Keep gathering signal.</div>
+      <div class="gdef"><b style="color:#5F6B7A">Wait</b> — the reading is too noisy to act on, or leans against without being decisive. Let it develop.</div>
+      <div class="gdef"><b style="color:#2E5794">Consult</b> — a rule has fired; before you act, someone else needs to be in the room.</div>
+      <div class="gdef"><b style="color:#8A2C1D">Toxic</b> — the evidence weighs decisively against, with enough clarity to trust it. Do not proceed.</div>
+
+      <div class="gkick">The four rules</div>
+      <p class="gp"><b>One-Way Brake.</b> Some doors close behind you. When a decision cannot be undone and confidence falls short of what the stakes demand, the kernel will not let a favorable lean carry you through — it forces Consult, so counsel comes before the irreversible step.</p>
+      <p class="gp"><b>Desolation.</b> Never make a change in desolation — a rule the instrument borrows from Ignatius of Loyola. When interference runs high, the reading may be sound, but you are in no state to act on it. The kernel demotes the verdict to Wait; take the reading again when the weather clears.</p>
+      <p class="gp"><b>Blast Consult.</b> When the cost of being wrong lands mostly on other people and your confidence is short of the commit floor, those who bear the cost get a voice. The kernel escalates to Consult.</p>
+      <p class="gp"><b>Urgency.</b> Sometimes waiting is itself a decision. When the window is closing on a reading that says Wait, deferral stops being neutral — the kernel says get counsel now instead.</p>
+
+      <div class="gkick">Reading the instrument</div>
+      <p class="gp">The point is the state of your decision. Higher means the evidence leans for; lower, against. Its distance from center is confidence — the closer it comes to the dashed ring, the closer the reading is to commit territory for these stakes. A steady point is a coherent reading; a wandering one is decohered.</p>
+      <p class="gp">The blue ring is signal clarity — the fuller it runs, the cleaner your reading. The gauges and mono figures beneath are the raw numbers, exactly as the kernel computed them.</p>
+
+      <div class="gkick">Closing the loop</div>
+      <p class="gp">When the kernel has spoken, you still choose: follow it or override it. Both are valid — the gap between your gut and the verdict is the data. Write down how you will know it worked, in a form that can fail; set a check-in date; and when it comes due, score what actually happened. Fifty scored outcomes will tell you more than any single verdict.</p>
+
+      <div class="gkick">Your data</div>
+      <p class="gp">Entries are stored only in this browser, on this device. Nothing is sent anywhere; there is no account and no server.</p>
+      <p class="gnote">That also means the journal is yours to lose: clearing this site's browsing data deletes it, and other devices will not see it.</p>
+
+    </div>
   </div>
 
 </div>
@@ -722,6 +791,8 @@ function wire(){
     if(e.target.closest("#introClose")){ dismissIntro(); return; }
     const bl=e.target.closest("#bottleneck");
     if(bl){ pulseControl(bl.dataset.target); return; }
+    if(e.target.closest("#guideBtn")||e.target.closest("#introGuide")){ openGuide(); return; }
+    if(e.target.closest("#guideClose")){ closeGuide(); return; }
     if(e.target.closest("#logBtn")){ logEntry(); return; }
   });
   root.addEventListener("input",e=>{
@@ -730,6 +801,9 @@ function wire(){
   });
   root.addEventListener("change",e=>{
     if(e.target.id==="oneWay"){ toggleDoor(e.target.checked); }
+  });
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape"&&!$("guide").hidden) closeGuide();
   });
   switchTab("today");
 }
@@ -1017,6 +1091,21 @@ function initSticky(){
   },true);
 
   evaluate();
+}
+
+/* ═══════════ guide overlay ═══════════ */
+// Pure show/hide over the app — no tab switch, no scroll reset, so closing
+// returns to exactly where the user was.
+function openGuide(){
+  const g=$("guide"); if(!g) return;
+  g.hidden=false; $("guideScroll").scrollTop=0;
+  if(!REDUCED){ g.style.animation="none"; void g.offsetWidth; g.style.animation="exUp .3s ease"; }
+  $("guideClose").focus({preventScroll:true});
+}
+function closeGuide(){
+  const g=$("guide"); if(!g) return;
+  g.hidden=true;
+  const b=$("guideBtn"); if(b) b.focus({preventScroll:true});
 }
 
 /* ═══════════ first-run note ═══════════ */
