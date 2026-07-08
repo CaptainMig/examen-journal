@@ -959,6 +959,17 @@ function switchTab(tab){
 // below the instrument stays visually stationary under the finger, with no rAF dependence.
 // The frozen `pin` is shifted by the same delta so this self-induced scroll isn't mistaken for
 // a user scroll toward the release threshold (which would otherwise oscillate the state).
+// Short-viewport support: when the expanded instrument is taller than the scroll area, a
+// sticky top of 0 would pin-and-compact it before its lower half (gauges, rules, divergence)
+// could ever be seen. Give it a negative sticky top equal to the overflow instead, so it
+// scrolls through fully and pins bottom-aligned; compaction engages only past that point.
+// On viewports tall enough to show the whole card, overhang is 0 and nothing changes.
+let lastStickyTop=null;
+function stickyOverhang(sc){ return Math.max(0, instrument.offsetHeight-sc.clientHeight); }
+function applyStickyTop(sc){
+  const t = stuck ? 0 : -stickyOverhang(sc);
+  if(t!==lastStickyTop){ lastStickyTop=t; instrument.style.top=t+"px"; }
+}
 function setStuck(on){
   if(on===stuck){ return; }
   const sc=$("scroll");
@@ -966,6 +977,7 @@ function setStuck(on){
   stuck=on;
   compacting=true;                        // ignore the scroll event our own adjustment fires
   instrument.classList.toggle("stuck",on);
+  applyStickyTop(sc);                     // compact pins at 0; expanded may need a negative top
   const d=instrument.offsetHeight-h0;     // instant height change → true delta now
   if(d && sc){ sc.scrollTop+=d; pin+=d; }
   clearTimeout(compactTimer);
@@ -984,8 +996,9 @@ function initSticky(){
     if(sen.offsetParent===null){ setStuck(false); return; } // Today tab hidden
     const y=sc.scrollTop;
     if(!stuck){
+      applyStickyTop(sc); // track height changes (verdict text, viewport rotation)
       pin = sen.getBoundingClientRect().top - sc.getBoundingClientRect().top + y; // live while stable
-      if(y > pin+8) setStuck(true);
+      if(y > pin+stickyOverhang(sc)+8) setStuck(true); // engage only after the full card has scrolled through
     } else if(y < pin-8) setStuck(false);
   };
   sc.addEventListener("scroll",evaluate,{passive:true});
