@@ -1075,7 +1075,10 @@ function initSticky(){
     if(!stuck){
       applyStickyTop(sc); // track height changes (verdict text, viewport rotation)
       pin = sen.getBoundingClientRect().top - sc.getBoundingClientRect().top + y; // live while stable
-      if(y > pin+stickyOverhang(sc)+8) setStuck(true); // engage only after the full card has scrolled through
+      // grace band: once the card's bottom is in view it stays pinned full-size for another
+      // 120px of scroll before compacting — a thumb-scroll can land in that window, so the
+      // bottom of the card is readable without having to hit an 8px target.
+      if(y > pin+stickyOverhang(sc)+120) setStuck(true);
     } else if(y < pin-8) setStuck(false);
   };
   sc.addEventListener("scroll",evaluate,{passive:true});
