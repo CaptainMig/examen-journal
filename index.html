@@ -806,6 +806,8 @@ function wire(){
     if(tb){ switchTab(tb.dataset.tab); return; }
     const sc=e.target.closest(".scoreBtn");
     if(sc){ score(sc.dataset.id,sc.dataset.outcome); return; }
+    const db=e.target.closest(".delBtn");
+    if(db){ deleteEntry(db.dataset.id); return; }
     if(e.target.closest("#clearDemoBtn")){ clearDemo(); return; }
     if(e.target.closest("#introClose")){ dismissIntro(); return; }
     const bl=e.target.closest("#bottleneck");
@@ -909,7 +911,23 @@ function saveAll(a){try{localStorage.setItem(STORE,JSON.stringify(a));}catch(e){
 function loadOrSeed(){
   let all=loadAll();
   if(all.length===0){ all=demoSeed(); saveAll(all); }
+  if(migrateLegacy(all)) saveAll(all);
   entries=all;
+}
+// Entries saved by the old capture page (examen_capture.html) use a different
+// schema: date/nerva/success/checkinDate and capitalized domains. Map them to
+// the current field names so they don't render as "undefined · Invalid Date".
+function migrateLegacy(a){
+  let changed=false;
+  a.forEach(e=>{
+    if(!e.ts&&e.date){e.ts=e.date;changed=true;}
+    if(!e.verdict&&e.nerva){e.verdict=e.nerva;changed=true;}
+    if(!e.falsification&&e.success){e.falsification=e.success;changed=true;}
+    if(!e.checkin&&e.checkinDate){e.checkin=e.checkinDate;changed=true;}
+    if(e.domain&&e.domain!==e.domain.toLowerCase()){e.domain=e.domain.toLowerCase();changed=true;}
+    if(e.scored===undefined){e.scored=!!e.outcome;changed=true;}
+  });
+  return changed;
 }
 function demoSeed(){
   const day=864e5, now=Date.now();
@@ -952,14 +970,22 @@ function logEntry(){
 }
 
 function score(id,outcome){
-  const e=entries.find(x=>x.id===id); if(!e) return;
+  const e=entries.find(x=>String(x.id)===String(id)); if(!e) return;
   e.outcome=outcome; e.scored=true; saveAll(entries);
+  renderReview(); renderInsights();
+}
+function deleteEntry(id){
+  const e=entries.find(x=>String(x.id)===String(id)); if(!e) return;
+  const label=(e.decision||"this entry").slice(0,60);
+  if(!confirm(`Delete "${label}"? This can't be undone.`)) return;
+  entries=entries.filter(x=>String(x.id)!==String(id));
+  saveAll(entries);
   renderReview(); renderInsights();
 }
 
 /* ═══════════ review render ═══════════ */
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
-function fmtDate(iso){try{return new Date(iso).toLocaleDateString("en-US",{month:"short",day:"numeric"});}catch(e){return iso;}}
+function fmtDate(iso){const d=new Date(iso);return isNaN(d)?"—":d.toLocaleDateString("en-US",{month:"short",day:"numeric"});}
 
 function renderReview(){
   const today=new Date().toISOString().slice(0,10);
@@ -997,8 +1023,9 @@ function renderReview(){
       <span style="width:8px;height:8px;border-radius:50%;background:${dot};flex-shrink:0"></span>
       <div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.decision)}</div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;color:#a89f8c;margin-top:1px">${esc(e.domain)} · ${fmtDate(e.ts)}${e.demo?' · demo':''}</div></div>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;color:${vc}">${e.verdict}</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;color:${vc}">${e.verdict||"—"}</span>
       <span title="${align?'aligned':'diverged'}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${align?'rgba(11,18,32,.25)':'#C8841C'}">${align?'=':'≠'}</span>
+      <button class="delBtn" data-id="${e.id}" title="Delete this entry" aria-label="Delete entry" style="font:400 15px Inter;line-height:1;color:rgba(11,18,32,.3);background:none;border:none;padding:6px;margin:-6px -2px -6px 0;cursor:pointer;flex-shrink:0">×</button>
     </div>`;
   }).join("");
 }
